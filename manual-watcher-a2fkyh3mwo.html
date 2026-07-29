@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a142a">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>NW watcher 使い方</title>
+<style>
+  :root{
+    --navy:#0a142a; --navy2:#16294a; --card:#ffffff; --line:#e2e6ec;
+    --text:#1c2530; --sub:#68727f; --accent:#4a90d9;
+    --green:#1e8e3e; --red:#c62828; --amber:#b8860b; --line-green:#06C755;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:#eef1f5;color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
+    -webkit-text-size-adjust:100%; line-height:1.8;}
+
+  header{background:linear-gradient(140deg,var(--navy),var(--navy2));color:#fff;
+    padding:calc(env(safe-area-inset-top) + 26px) 20px 24px;}
+  header .badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;
+    background:rgba(255,255,255,.18);padding:4px 12px;border-radius:20px;margin-bottom:10px;}
+  header h1{margin:0 0 6px;font-size:24px;font-weight:800;letter-spacing:.01em;}
+  header p{margin:0;font-size:13px;opacity:.82;line-height:1.7;}
+
+  nav{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);
+    display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px;}
+  nav a{flex:0 0 auto;padding:13px 12px;font-size:12.5px;font-weight:800;color:var(--sub);
+    text-decoration:none;white-space:nowrap;border-bottom:3px solid transparent;}
+  nav a:active{color:var(--navy);}
+
+  main{padding:20px 16px 60px;max-width:640px;margin:0 auto;}
+
+  section{background:var(--card);border-radius:16px;margin-bottom:16px;overflow:hidden;
+    box-shadow:0 1px 3px rgba(20,40,70,.08);}
+  section > h2{margin:0;padding:16px 18px;font-size:16px;font-weight:800;color:#fff;
+    background:var(--navy2);display:flex;align-items:center;gap:10px;}
+  section > h2 .n{display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.2);
+    font-size:13px;flex:0 0 auto;}
+  .body{padding:18px;}
+
+  h3{font-size:14.5px;font-weight:800;color:var(--navy2);margin:22px 0 10px;
+    padding-left:11px;border-left:4px solid var(--accent);}
+  h3:first-child{margin-top:0;}
+
+  p{margin:0 0 12px;font-size:14.5px;}
+  ul,ol{margin:0 0 14px;padding-left:22px;font-size:14.5px;}
+  li{margin-bottom:7px;}
+  b,strong{color:#0f3d70;}
+
+  .steps{counter-reset:s;list-style:none;padding:0;margin:0 0 14px;}
+  .steps li{counter-increment:s;position:relative;padding:0 0 14px 40px;margin:0;font-size:14.5px;}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:1px;
+    width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+    font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+
+  .note{border-radius:12px;padding:13px 15px;font-size:13.5px;margin:0 0 14px;line-height:1.75;}
+  .note.info{background:#eaf2fb;border:1px solid #c9dcf2;}
+  .note.warn{background:#fff7e2;border:1px solid #f0e0a8;}
+  .note.alert{background:#fdecec;border:1px solid #f4c9c9;}
+  .note .t{font-weight:800;display:block;margin-bottom:4px;}
+  .note.info .t{color:#14508f;}
+  .note.warn .t{color:#8a6a00;}
+  .note.alert .t{color:var(--red);}
+
+  table{border-collapse:collapse;width:100%;font-size:13.5px;margin:0 0 14px;}
+  th{background:var(--navy2);color:#fff;text-align:left;padding:9px 11px;font-weight:800;}
+  td{border-bottom:1px solid var(--line);padding:9px 11px;vertical-align:top;}
+  tr:nth-child(even) td{background:#f7f9fc;}
+
+  .btn{display:inline-block;background:#eef2f7;border:1px solid #d3dbe5;border-radius:8px;
+    padding:2px 9px;font-size:13px;font-weight:800;color:var(--navy2);white-space:nowrap;}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:5px;}
+  .dot.b{background:var(--accent);} .dot.y{background:#e8b400;} .dot.r{background:var(--red);}
+
+  details{border:1px solid var(--line);border-radius:11px;margin-bottom:10px;overflow:hidden;}
+  details summary{padding:13px 15px;font-size:14px;font-weight:800;background:#f6f8fb;
+    cursor:pointer;list-style:none;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary::after{content:"＋";float:right;color:var(--sub);font-weight:800;}
+  details[open] summary::after{content:"−";}
+  details .dbody{padding:14px 15px;font-size:14px;border-top:1px solid var(--line);}
+
+  .check{list-style:none;padding:0;margin:0;}
+  .check li{position:relative;padding:0 0 11px 30px;font-size:14.5px;}
+  .check li::before{content:"";position:absolute;left:0;top:5px;width:17px;height:17px;
+    border:2px solid var(--accent);border-radius:4px;}
+
+
+  .urlbox{background:#0f2340;color:#fff;border-radius:12px;padding:15px 16px;margin:0 0 14px;}
+  .urlbox .lb{font-size:11.5px;font-weight:800;opacity:.7;letter-spacing:.06em;margin-bottom:7px;}
+  .urlbox .u{font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    word-break:break-all;line-height:1.75;background:rgba(255,255,255,.1);
+    border-radius:8px;padding:10px 12px;-webkit-user-select:all;user-select:all;}
+  .urlbox .hint{font-size:11.5px;opacity:.72;margin-top:8px;line-height:1.7;}
+
+  .launch{display:block;text-decoration:none;background:linear-gradient(135deg,#1c4a86,#2f6bb8);
+    color:#fff;border-radius:14px;padding:17px 18px;margin:0 0 16px;
+    box-shadow:0 3px 10px rgba(28,74,134,.28);}
+  .launch .l1{font-size:16.5px;font-weight:800;margin-bottom:3px;}
+  .launch .l2{font-size:12.5px;opacity:.85;line-height:1.6;}
+  footer{text-align:center;padding:26px 20px 46px;font-size:12px;color:var(--sub);}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="badge">見守る人が使うアプリ</span>
+  <h1>NW watcher 使い方</h1>
+  <p>2026 寮生Night Walk in 伊勢<br>夜通し歩くお子さんの進捗を確認できます</p>
+</header>
+
+<nav>
+  <a href="#s1">1 このアプリ</a>
+  <a href="#s2">2 準備</a>
+  <a href="#s3">3 設定</a>
+  <a href="#s4">4 画面の見方</a>
+  <a href="#s5">5 当日</a>
+  <a href="#s6">6 困ったら</a>
+</nav>
+
+<main>
+
+<section id="s1">
+  <h2><span class="n">1</span>このアプリでできること</h2>
+  <div class="body">
+    <h3>できること</h3>
+    <ul>
+      <li>今どこにいるか（通過した地点・次の目的地）</li>
+      <li>予定より遅れているか、進んでいるか</li>
+      <li>ゴール到着の予想時刻</li>
+      <li>地図で最後に受信した位置を確認</li>
+      <li>ワンタップで電話をかける</li>
+    </ul>
+
+    <div class="note alert">
+      <span class="t">リアルタイムの追跡はしません</span>
+      位置が更新されるのは、お子さんが<b>到着・出発ボタンを押したとき</b>と、アプリを開いている間だけです。<br><br>
+      <b>常に正確な現在地を知りたいときは、iPhone標準の「探す」アプリをお使いください。</b>このアプリ内の <span class="btn">📍 探す</span> ボタンからも開けます。
+    </div>
+
+    <div class="note info">
+      <span class="t">更新の間隔が空くのは正常です</span>
+      休憩地点の間隔は1〜2時間あります。その間、更新が止まっていても異常ではありません。心配なときは <span class="btn">📞 電話</span> でご確認ください。
+    </div>
+  </div>
+</section>
+
+<section id="s2">
+  <h2><span class="n">2</span>ホーム画面に追加する</h2>
+  <div class="body">
+    <a class="launch" href="watcher/">
+      <div class="l1">▶ NW watcher を開く</div>
+      <div class="l2">見守る人が使うアプリ／タップするとアプリが開きます</div>
+    </a>
+
+    <div class="note alert">
+      <span class="t">必ず Safari で開いてください</span>
+      LINEやChromeの中で開くと、ホーム画面に追加できません。LINEで開いた場合は、右下の「Safariで開く」を押してください。
+    </div>
+
+    <ol class="steps">
+      <li>Safariで、送られてきたURLを開く</li>
+      <li><b>NW watcher</b> をタップ</li>
+      <li>画面下の共有ボタン <span class="btn">⬆️</span> をタップ</li>
+      <li>メニューを下にスクロールして <span class="btn">ホーム画面に追加</span> をタップ</li>
+      <li>右上の <span class="btn">追加</span> をタップ</li>
+      <li>ホーム画面にアイコンができるので、そこから起動する</li>
+    </ol>
+
+    <div class="note info">
+      <span class="t">以降は必ずアイコンから起動してください</span>
+      Safariのタブから開くと、正しく動作しないことがあります。
+    </div>
+  </div>
+</section>
+
+<section id="s3">
+  <h2><span class="n">3</span>最初の設定</h2>
+  <div class="body">
+    <p>お子さんからLINEで <b>URL</b> と <b>ペアコード</b> が送られてきます。それを入力します。</p>
+
+    <div class="urlbox">
+      <div class="lb">ウェブアプリURL（長押しでコピー）</div>
+      <div class="u">★★ここにウェブアプリURLを貼り付けてください★★</div>
+      <div class="hint">上のURLを長押し → コピー → アプリの「ウェブアプリURL」欄に貼り付けてください。<br>ペアコードは、お子さんからLINEで届いたものを入力します。</div>
+    </div>
+
+    <ol class="steps">
+      <li>アプリを開き、下の方の <span class="btn">⚙️ 設定を開く</span> をタップ</li>
+      <li>上の<b>ウェブアプリURL</b>をコピーして貼り付ける</li>
+      <li><b>ペアコード</b> を入力（NW-8F3K2Q のような形式）</li>
+      <li><b>お子さんの電話番号</b> を入力</li>
+      <li><span class="btn">保存</span> をタップ</li>
+      <li>画面上部に「◯◯さん・最終更新 ◯分前」と出れば成功</li>
+    </ol>
+
+    <div class="note info">
+      <span class="t">ペアコードとは</span>
+      親子を結びつける合言葉です。複数の親子が同じ仕組みを使っていても、ペアコードが違えば記録が混ざることはありません。
+    </div>
+
+    <p>設定はこの端末に記憶されるので、次回から入力は不要です。</p>
+  </div>
+</section>
+
+<section id="s4">
+  <h2><span class="n">4</span>画面の見方</h2>
+  <div class="body">
+    <h3>一番上のバー</h3>
+    <p>最後に連絡があった時刻です。「◯◯さん・最終更新 12分前」のように表示されます。</p>
+
+    <h3>現在の状況</h3>
+    <p>「⑤ローソン 松阪鎌田店 に到着」「休憩中（予定20分）」のように、今どこで何をしているかが分かります。</p>
+
+    <h3>ゴール到着予想 ／ 予定との差</h3>
+    <p>現在のペースから計算した到着時刻と、当初予定（8/2 8:30）とのズレです。<span style="color:#c62828;font-weight:800">遅れは赤</span>、<span style="color:#1e8e3e;font-weight:800">前倒しは緑</span>で表示されます。</p>
+
+    <h3>4つのボタン</h3>
+    <table>
+      <tr><th>ボタン</th><th>できること</th></tr>
+      <tr><td>🗺️ 地図で見る</td><td>コース全体と、最後に受信した位置を表示</td></tr>
+      <tr><td>📍 探す</td><td><b>標準の「探す」アプリを開く。正確な現在地はこちら</b></td></tr>
+      <tr><td>📞 電話</td><td>お子さんに発信</td></tr>
+      <tr><td>🔄 更新</td><td>すぐに最新情報を取得（通常は1分ごとに自動）</td></tr>
+    </table>
+
+    <h3>通過記録</h3>
+    <p>全10地点の一覧です。到着済みは緑、次の目的地は黄色で表示され、予定と実際の時刻、遅れが分かります。</p>
+  </div>
+</section>
+
+<section id="s5">
+  <h2><span class="n">5</span>当日の見守り方</h2>
+  <div class="body">
+    <h3>更新のタイミング</h3>
+    <ul>
+      <li>お子さんが<b>到着・出発ボタンを押したとき</b>に必ず届きます</li>
+      <li>アプリを開いている間は、3分ごとにも届きます</li>
+      <li>画面を消している間は止まります（正常な動作です）</li>
+    </ul>
+
+    <h3>LINEにも届きます</h3>
+    <p>到着・出発のたびに、お子さんからLINEで通知が届きます。距離・所要時間・平均ペース・天候なども入っています。あわせてご確認ください。</p>
+
+    <h3>心配なときは</h3>
+    <ol class="steps">
+      <li><span class="btn">🔄 更新</span> を押して最新を取得してみる</li>
+      <li><span class="btn">📍 探す</span> で現在地を確認する</li>
+      <li>それでも心配なら <span class="btn">📞 電話</span> で直接連絡する</li>
+    </ol>
+  </div>
+</section>
+
+<section id="s6">
+  <h2><span class="n">6</span>困ったときは</h2>
+  <div class="body">
+    <table>
+      <tr><th>表示</th><th>対処</th></tr>
+      <tr><td>設定が未完了です</td><td>⚙️ 設定を開く からURLとペアコードを入力</td></tr>
+      <tr><td>まだ記録がありません</td><td>お子さんがまだ送信していません。Night Walkerで「今すぐ送信してテスト」を押してもらう</td></tr>
+      <tr><td>invalid pair code</td><td>ペアコードが違います。お子さんのものと同じか確認</td></tr>
+      <tr><td>通信できませんでした</td><td>電波状況を確認。しばらくすると自動で再取得します</td></tr>
+      <tr><td>地図に位置が出ない</td><td>まだ位置情報付きの送信がないか、位置が取得できていません</td></tr>
+      <tr><td>更新が長く止まっている</td><td>省電力のため正常な場合が多いです。「📍 探す」または「📞 電話」でご確認ください</td></tr>
+    </table>
+
+    <h3>記録をリセットしたいとき</h3>
+    <p>テストで入れた記録を消す場合は、<span class="btn">⚙️ 設定を開く</span> → <span class="btn">記録をリセット</span> です。</p>
+    <p>消えるのは共有されている記録だけで、<b>お子さんの端末に入力された時刻は消えません。</b></p>
+
+    <h3>当日までの確認</h3>
+    <ul class="check">
+      <li>ホーム画面に追加した</li>
+      <li>URL・ペアコード・電話番号を設定した</li>
+      <li>「◯◯さん・最終更新 ◯分前」と表示された</li>
+      <li>お子さんに到着ボタンを押してもらい、画面に反映されるか確認した</li>
+      <li>「📍 探す」で位置が見られるか確認した</li>
+      <li>「📞 電話」で発信できるか確認した</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  NW watcher 使い方<br>2026 寮生Night Walk in 伊勢
+</footer>
+
+</body>
+</html>

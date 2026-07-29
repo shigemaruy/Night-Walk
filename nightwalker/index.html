@@ -218,6 +218,19 @@
     font-weight:800; font-size:13.5px; line-height:1.3;
   }
   .quickActionBtn.callParent{background:var(--green);}
+  .photoStatus{margin:8px 18px 0; padding:10px 13px; border-radius:10px; font-size:13px;
+    font-weight:700; background:#e8f0fb; color:var(--navy); border:1px solid #c3d7ef;}
+  .photoStatus.err{background:#fdeaea; color:var(--red); border-color:#f3c6c6;}
+  .photoFallback{margin:8px 18px 0; padding:12px; background:#fff; border:1px solid var(--line);
+    border-radius:12px;}
+  .photoFallback img{width:100%; border-radius:10px; display:block; margin-bottom:10px;}
+  .photoFallback .cap{font-size:13px; font-weight:700; color:var(--navy); margin-bottom:10px;
+    background:#f4f6f8; border-radius:8px; padding:9px 11px; -webkit-user-select:all; user-select:all;}
+  .photoFallback .fbRow{display:flex; gap:8px;}
+  .photoFallback .fbBtn{flex:1; text-align:center; text-decoration:none; padding:11px 6px;
+    background:var(--navy); color:#fff; border:none; border-radius:9px;
+    font-weight:800; font-size:13px;}
+  .photoFallback .fbNote{font-size:11px; color:var(--sub); margin-top:9px; line-height:1.6;}
   .quickActionBtn.photoSend{background:#06C755;}
   .quickActionBtn:disabled{background:#c6ccd3;}
   .fullRouteOverlay{
@@ -299,6 +312,8 @@
   <button type="button" class="quickActionBtn photoSend" id="photoSendBtn">📷 写真をLINEで送る</button>
 </div>
 <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+<div class="photoStatus" id="photoStatus" style="display:none;"></div>
+<div class="photoFallback" id="photoFallback" style="display:none;"></div>
 
 <button class="fullRouteBtn" id="fullRouteBtn" type="button">🗺️ 全工程のルートを見る</button>
 <div class="fullRouteOverlay" id="fullRouteMapWrap" style="display:none;">
@@ -475,7 +490,15 @@
 
   var PLAN = (currentPlanKey === "fast") ? PLAN_FAST : PLAN_NORMAL;
 
-  // 各地点の緯度経度(Apple Mapsで開くためのデータ。id:0=出発〜9=ゴール、両プラン共通)
+  // ---------- 端末の判定 ----------
+  // iPhone専用の機能（Apple Maps・天気アプリ等）は、他の端末では代わりのものを開く
+  function isIOS(){
+    var ua = navigator.userAgent || "";
+    return /iPad|iPhone|iPod/.test(ua)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
+  // 各地点の緯度経度(地図で開くためのデータ。id:0=出発〜9=ゴール、両プラン共通)
   var COORDS = {
     0: {lat:34.840872, lng:136.403097, label:"名阪関ドライブイン"},
     1: {lat:34.778103, lng:136.477556, label:"ファミマ大里睦合町店"},
@@ -492,7 +515,9 @@
     var c = COORDS[id];
     if(!c) return null;
     // daddr(目的地)のみ指定し、出発地は省略すると「現在地から」のルートになる。dirflg=wで徒歩ルート。
-    return "https://maps.apple.com/?daddr=" + c.lat + "," + c.lng + "&dirflg=w&q=" + encodeURIComponent(c.label);
+    return isIOS()
+      ? "https://maps.apple.com/?daddr=" + c.lat + "," + c.lng + "&dirflg=w&q=" + encodeURIComponent(c.label)
+      : "https://www.google.com/maps/dir/?api=1&destination=" + c.lat + "," + c.lng + "&travelmode=walking";
   }
 
   // 全工程(出発〜ゴール、経由地8か所)の徒歩ルートURL(外部Apple Mapsアプリで開く用)。
@@ -504,7 +529,16 @@
     });
     var saddr = coordsList[0];
     var daddr = coordsList.slice(1).join("+to:");
-    return "https://maps.apple.com/?saddr=" + saddr + "&daddr=" + daddr + "&dirflg=w";
+    if(isIOS()){
+      return "https://maps.apple.com/?saddr=" + saddr + "&daddr=" + daddr + "&dirflg=w";
+    }
+    // Android等ではGoogleマップの経由地つきURLを使う
+    var wp = coordsList.slice(1, coordsList.length-1).join("|");
+    return "https://www.google.com/maps/dir/?api=1"
+      + "&origin=" + saddr
+      + "&destination=" + coordsList[coordsList.length-1]
+      + "&waypoints=" + encodeURIComponent(wp)
+      + "&travelmode=walking";
   }
 
   // 各地点のピン表示ラベル(出発=S、休憩地点=①〜⑧、ゴール=G)
@@ -1196,9 +1230,20 @@
   // Content-Type を text/plain にしているのは、application/json だと
   // ブラウザが事前確認(プリフライト)を行い、Apps Script 側がそれに応答できず失敗するため。
   // 「ペアコード」で親子を紐づけるため、1つのスプレッドシートを複数の親子が同時に使える。
+  // ★配布前に、下の __WEBAPP_URL__ を Apps Script のウェブアプリURLに置き換えてください。
+  //   置き換えておくと、利用者はペアコードを入れるだけで設定が完了します。
+  var DEFAULT_WATCH_URL = "__WEBAPP_URL__";
+  function defaultWatchUrl(){
+    // 置き換えられていない場合は空として扱う
+    return (DEFAULT_WATCH_URL.indexOf("__") === 0) ? "" : DEFAULT_WATCH_URL;
+  }
+
   var WATCH_URL_KEY = "nightwalk2026_watchurl";
   var PAIR_KEY = "nightwalk2026_paircode";
-  function loadWatchUrl(){ try{ return localStorage.getItem(WATCH_URL_KEY) || ""; }catch(e){ return ""; } }
+  function loadWatchUrl(){
+    try{ return localStorage.getItem(WATCH_URL_KEY) || defaultWatchUrl(); }
+    catch(e){ return defaultWatchUrl(); }
+  }
   function loadPairCode(){ try{ return localStorage.getItem(PAIR_KEY) || ""; }catch(e){ return ""; } }
   var watchUrl = loadWatchUrl();
   var pairCode = loadPairCode();
@@ -1310,7 +1355,10 @@
   // ブラウザから直接LINEのAPIを呼ぶことはできないため、PWAではこの方式のみ。
   function sendLineMessage(text){
     try{
-      window.location.href = "line://msg/text/" + encodeURIComponent(text);
+      // line:// はiOSで確実。Android等では https のリンクの方が確実に開く
+      window.location.href = isIOS()
+        ? "line://msg/text/" + encodeURIComponent(text)
+        : "https://line.me/R/share?text=" + encodeURIComponent(text);
     }catch(e){}
   }
 
@@ -1745,7 +1793,16 @@
   }
   document.getElementById("weatherBar").addEventListener("click", function(){
     // iOS標準の天気アプリを開く(非公式だが広く動作するURLスキーム)
-    window.location.href = "weather://";
+    // 天気アプリはiPhone専用。他の端末では現在地の天気ページを開く
+    if(isIOS()){
+      window.location.href = "weather://";
+    } else {
+      var pos = latestPosition();
+      window.open(pos
+        ? "https://www.google.com/search?q=" + encodeURIComponent("天気 " + pos.lat.toFixed(3) + "," + pos.lng.toFixed(3))
+        : "https://www.google.com/search?q=" + encodeURIComponent("現在地の天気"),
+        "_blank");
+    }
   });
 
   // ---------- 一括リセット ----------
@@ -1811,96 +1868,93 @@
   }
 
   // ---------- 写真を撮ってLINEで送る ----------
-  // 画像の共有はURLスキームでは行えないため、Swift側の共有シート(UIActivityViewController)へ渡す。
+  // iOSでは navigator.share() を「操作の直後」に呼ぶ必要がある。
+  // 画像の縮小などを挟むと有効期限が切れて拒否されるため、
+  // 撮影直後に、撮った写真をそのまま共有する。
+  function photoCaption(){
+    var now = new Date();
+    var hhmm = pad2(now.getHours())+":"+pad2(now.getMinutes());
+    var who = userName ? userName+"さん" : "";
+    return hhmm + " " + who + "／" + currentPlaceLabel();
+  }
+  function setPhotoStatus(msg, isErr){
+    var el = document.getElementById("photoStatus");
+    if(!el) return;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+    el.className = "photoStatus" + (isErr ? " err" : "");
+  }
+  function clearPhotoFallback(){
+    var el = document.getElementById("photoFallback");
+    if(el){ el.style.display = "none"; el.innerHTML = ""; }
+  }
+
   document.getElementById("photoSendBtn").addEventListener("click", function(){
+    setPhotoStatus("");
+    clearPhotoFallback();
     document.getElementById("photoInput").click();
   });
+
   document.getElementById("photoInput").addEventListener("change", function(){
     var file = this.files && this.files[0];
+    this.value = ""; // 同じ写真を続けて選べるようにする
     if(!file) return;
-    var btn = document.getElementById("photoSendBtn");
-    btn.disabled = true;
-    btn.textContent = "📷 準備中…";
-    var reader = new FileReader();
-    reader.onload = function(ev){
-      shrinkImage(ev.target.result, 1280, 0.8, function(dataUrl){
-        var now = new Date();
-        var hhmm = pad2(now.getHours())+":"+pad2(now.getMinutes());
-        var who = userName ? userName+"さん" : "";
-        var caption = hhmm + " " + who + "／" + currentPlaceLabel();
-        sendPhotoToLine(dataUrl, caption);
-        btn.disabled = false;
-        btn.textContent = "📷 写真をLINEで送る";
-      });
-    };
-    reader.onerror = function(){
-      btn.disabled = false;
-      btn.textContent = "📷 写真をLINEで送る";
-      alertBar("写真を読み込めませんでした。");
-    };
-    reader.readAsDataURL(file);
-    this.value = ""; // 同じ写真を連続で選べるようにする
-  });
 
-  // 通信量と処理時間を抑えるため、送る前に画像を縮小する
-  function shrinkImage(dataUrl, maxSide, quality, cb){
-    var img = new Image();
-    img.onload = function(){
-      var w = img.width, h = img.height;
-      var scale = Math.min(1, maxSide/Math.max(w,h));
-      var cw = Math.round(w*scale), ch = Math.round(h*scale);
-      var canvas = document.createElement("canvas");
-      canvas.width = cw; canvas.height = ch;
-      canvas.getContext("2d").drawImage(img, 0, 0, cw, ch);
-      try{
-        cb(canvas.toDataURL("image/jpeg", quality));
-      }catch(e){
-        cb(dataUrl);
-      }
-    };
-    img.onerror = function(){ cb(dataUrl); };
-    img.src = dataUrl;
-  }
+    var caption = photoCaption();
+    var withText = { files:[file], text: caption };
+    var onlyFile = { files:[file] };
 
-  // 写真の共有。iOSのWeb共有機能（共有シート）を使い、そこからLINEを選んでもらう。
-  // ブラウザからLINEへ画像を直接送る手段はないため、この方式が唯一の方法。
-  function dataUrlToFile(dataUrl, filename){
-    var parts = dataUrl.split(",");
-    var mime = (parts[0].match(/:(.*?);/) || [null,"image/jpeg"])[1];
-    var bin = atob(parts[1]);
-    var arr = new Uint8Array(bin.length);
-    for(var i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
-    return new File([arr], filename, {type: mime});
-  }
+    var payload = null;
+    if(navigator.canShare){
+      if(navigator.canShare(withText)) payload = withText;
+      else if(navigator.canShare(onlyFile)) payload = onlyFile;
+    }
 
-  function sendPhotoToLine(dataUrl, caption){
-    var file;
-    try{
-      file = dataUrlToFile(dataUrl, "nightwalk.jpg");
-    }catch(e){
-      alertBar("写真を準備できませんでした。");
+    if(!payload || !navigator.share){
+      showPhotoFallback(file, caption, "この端末では写真の共有に対応していません。");
       return;
     }
-    if(navigator.canShare && navigator.canShare({files:[file]}) && navigator.share){
-      navigator.share({ files:[file], text: caption })
-        .then(function(){ alertBar(""); })
-        .catch(function(err){
-          if(err && err.name === "AbortError") return; // ユーザーが取り消しただけ
-          alertBar("写真を共有できませんでした。");
-        });
-    } else {
-      // 共有機能が使えない場合は、写真を保存してもらいLINEアプリから送ってもらう
-      try{
-        var a = document.createElement("a");
-        a.href = dataUrl;
-        a.download = "nightwalk.jpg";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertBar("写真を保存しました。LINEアプリから送ってください。");
-      }catch(e2){
-        alertBar("この端末では写真の共有に対応していません。");
+
+    setPhotoStatus("共有先を選んでください…", false);
+    navigator.share(payload).then(function(){
+      setPhotoStatus("写真を送りました。", false);
+      setTimeout(function(){ setPhotoStatus(""); }, 4000);
+    }).catch(function(err){
+      if(err && err.name === "AbortError"){
+        setPhotoStatus(""); // ユーザーが取り消しただけ
+        return;
       }
+      showPhotoFallback(file, caption, "共有できませんでした。下の写真を保存して、LINEから送ってください。");
+    });
+  });
+
+  // 共有が使えなかったときの代替手段。写真を表示し、保存と文面のコピーができるようにする。
+  function showPhotoFallback(file, caption, msg){
+    setPhotoStatus(msg, true);
+    var box = document.getElementById("photoFallback");
+    if(!box) return;
+    var url = URL.createObjectURL(file);
+    box.innerHTML =
+      '<img src="'+url+'" alt="撮影した写真">'
+      + '<div class="cap" id="photoCap">'+caption+'</div>'
+      + '<div class="fbRow">'
+      + '  <a class="fbBtn" id="photoSaveBtn" href="'+url+'" download="nightwalk.jpg">写真を保存</a>'
+      + '  <button type="button" class="fbBtn" id="photoCopyBtn">文面をコピー</button>'
+      + '</div>'
+      + '<div class="fbNote">写真を長押しして「”写真”に保存」でも保存できます。保存後、LINEアプリから送ってください。</div>';
+    box.style.display = "block";
+
+    var copyBtn = document.getElementById("photoCopyBtn");
+    if(copyBtn){
+      copyBtn.addEventListener("click", function(){
+        var t = caption;
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(t).then(function(){
+            copyBtn.textContent = "コピーしました";
+            setTimeout(function(){ copyBtn.textContent = "文面をコピー"; }, 2000);
+          }).catch(function(){});
+        }
+      });
     }
   }
 

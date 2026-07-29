@@ -273,6 +273,13 @@
     8: {lat:34.492687, lng:136.674677, label:"セブン伊勢小俣宮前店"},
     9: {lat:34.467004, lng:136.720526, label:"猿田彦神社"}
   };
+  // iPhone専用の機能は、他の端末では代わりのものを開く
+  function isIOS(){
+    var ua = navigator.userAgent || "";
+    return /iPad|iPhone|iPod/.test(ua)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
   function pinLabel(id){
     if(id===0) return "S";
     if(id===9) return "G";
@@ -280,10 +287,17 @@
   }
 
   // ---------- 設定 ----------
+  // ★配布前に、下の __WEBAPP_URL__ を Apps Script のウェブアプリURLに置き換えてください。
+  //   置き換えておくと、利用者はペアコードを入れるだけで設定が完了します。
+  var DEFAULT_WATCH_URL = "__WEBAPP_URL__";
+  function defaultWatchUrl(){
+    return (DEFAULT_WATCH_URL.indexOf("__") === 0) ? "" : DEFAULT_WATCH_URL;
+  }
+
   var K_URL="nwwatcher_url", K_PAIR="nwwatcher_pair", K_TEL="nwwatcher_tel";
   function lsGet(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-  var cfgUrl=lsGet(K_URL), cfgPair=lsGet(K_PAIR), cfgTel=lsGet(K_TEL);
+  var cfgUrl=lsGet(K_URL) || defaultWatchUrl(), cfgPair=lsGet(K_PAIR), cfgTel=lsGet(K_TEL);
 
   // ---------- 時刻ユーティリティ ----------
   function pad2(n){ return (n<10?"0":"")+n; }
@@ -556,7 +570,12 @@
     document.getElementById("mapOverlay").classList.remove("show");
   });
   document.getElementById("findBtn").addEventListener("click", function(){
-    window.location.href="findmy://";
+    // 「探す」はiPhone専用。他の端末ではGoogleの端末を探すページを開く
+    if(isIOS()){
+      window.location.href = "findmy://";
+    } else {
+      window.open("https://www.google.com/android/find", "_blank");
+    }
   });
   document.getElementById("callBtn").addEventListener("click", function(){
     if(!cfgTel){

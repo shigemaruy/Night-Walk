@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a142a">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Night Walker 使い方</title>
+<style>
+  :root{
+    --navy:#0a142a; --navy2:#16294a; --card:#ffffff; --line:#e2e6ec;
+    --text:#1c2530; --sub:#68727f; --accent:#4a90d9;
+    --green:#1e8e3e; --red:#c62828; --amber:#b8860b; --line-green:#06C755;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:#eef1f5;color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
+    -webkit-text-size-adjust:100%; line-height:1.8;}
+
+  header{background:linear-gradient(140deg,var(--navy),var(--navy2));color:#fff;
+    padding:calc(env(safe-area-inset-top) + 26px) 20px 24px;}
+  header .badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;
+    background:rgba(255,255,255,.18);padding:4px 12px;border-radius:20px;margin-bottom:10px;}
+  header h1{margin:0 0 6px;font-size:24px;font-weight:800;letter-spacing:.01em;}
+  header p{margin:0;font-size:13px;opacity:.82;line-height:1.7;}
+
+  nav{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);
+    display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px;}
+  nav a{flex:0 0 auto;padding:13px 12px;font-size:12.5px;font-weight:800;color:var(--sub);
+    text-decoration:none;white-space:nowrap;border-bottom:3px solid transparent;}
+  nav a:active{color:var(--navy);}
+
+  main{padding:20px 16px 60px;max-width:640px;margin:0 auto;}
+
+  section{background:var(--card);border-radius:16px;margin-bottom:16px;overflow:hidden;
+    box-shadow:0 1px 3px rgba(20,40,70,.08);}
+  section > h2{margin:0;padding:16px 18px;font-size:16px;font-weight:800;color:#fff;
+    background:var(--navy2);display:flex;align-items:center;gap:10px;}
+  section > h2 .n{display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.2);
+    font-size:13px;flex:0 0 auto;}
+  .body{padding:18px;}
+
+  h3{font-size:14.5px;font-weight:800;color:var(--navy2);margin:22px 0 10px;
+    padding-left:11px;border-left:4px solid var(--accent);}
+  h3:first-child{margin-top:0;}
+
+  p{margin:0 0 12px;font-size:14.5px;}
+  ul,ol{margin:0 0 14px;padding-left:22px;font-size:14.5px;}
+  li{margin-bottom:7px;}
+  b,strong{color:#0f3d70;}
+
+  .steps{counter-reset:s;list-style:none;padding:0;margin:0 0 14px;}
+  .steps li{counter-increment:s;position:relative;padding:0 0 14px 40px;margin:0;font-size:14.5px;}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:1px;
+    width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+    font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+
+  .note{border-radius:12px;padding:13px 15px;font-size:13.5px;margin:0 0 14px;line-height:1.75;}
+  .note.info{background:#eaf2fb;border:1px solid #c9dcf2;}
+  .note.warn{background:#fff7e2;border:1px solid #f0e0a8;}
+  .note.alert{background:#fdecec;border:1px solid #f4c9c9;}
+  .note .t{font-weight:800;display:block;margin-bottom:4px;}
+  .note.info .t{color:#14508f;}
+  .note.warn .t{color:#8a6a00;}
+  .note.alert .t{color:var(--red);}
+
+  table{border-collapse:collapse;width:100%;font-size:13.5px;margin:0 0 14px;}
+  th{background:var(--navy2);color:#fff;text-align:left;padding:9px 11px;font-weight:800;}
+  td{border-bottom:1px solid var(--line);padding:9px 11px;vertical-align:top;}
+  tr:nth-child(even) td{background:#f7f9fc;}
+
+  .btn{display:inline-block;background:#eef2f7;border:1px solid #d3dbe5;border-radius:8px;
+    padding:2px 9px;font-size:13px;font-weight:800;color:var(--navy2);white-space:nowrap;}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:5px;}
+  .dot.b{background:var(--accent);} .dot.y{background:#e8b400;} .dot.r{background:var(--red);}
+
+  details{border:1px solid var(--line);border-radius:11px;margin-bottom:10px;overflow:hidden;}
+  details summary{padding:13px 15px;font-size:14px;font-weight:800;background:#f6f8fb;
+    cursor:pointer;list-style:none;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary::after{content:"＋";float:right;color:var(--sub);font-weight:800;}
+  details[open] summary::after{content:"−";}
+  details .dbody{padding:14px 15px;font-size:14px;border-top:1px solid var(--line);}
+
+  .check{list-style:none;padding:0;margin:0;}
+  .check li{position:relative;padding:0 0 11px 30px;font-size:14.5px;}
+  .check li::before{content:"";position:absolute;left:0;top:5px;width:17px;height:17px;
+    border:2px solid var(--accent);border-radius:4px;}
+
+
+  .urlbox{background:#0f2340;color:#fff;border-radius:12px;padding:15px 16px;margin:0 0 14px;}
+  .urlbox .lb{font-size:11.5px;font-weight:800;opacity:.7;letter-spacing:.06em;margin-bottom:7px;}
+  .urlbox .u{font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    word-break:break-all;line-height:1.75;background:rgba(255,255,255,.1);
+    border-radius:8px;padding:10px 12px;-webkit-user-select:all;user-select:all;}
+  .urlbox .hint{font-size:11.5px;opacity:.72;margin-top:8px;line-height:1.7;}
+
+  .launch{display:block;text-decoration:none;background:linear-gradient(135deg,#1c4a86,#2f6bb8);
+    color:#fff;border-radius:14px;padding:17px 18px;margin:0 0 16px;
+    box-shadow:0 3px 10px rgba(28,74,134,.28);}
+  .launch .l1{font-size:16.5px;font-weight:800;margin-bottom:3px;}
+  .launch .l2{font-size:12.5px;opacity:.85;line-height:1.6;}
+  footer{text-align:center;padding:26px 20px 46px;font-size:12px;color:var(--sub);}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="badge">歩く人が使うアプリ</span>
+  <h1>Night Walker 使い方</h1>
+  <p>2026 寮生Night Walk in 伊勢<br>名阪国道関ドライブイン → 猿田彦神社</p>
+</header>
+
+<nav>
+  <a href="#s1">1 準備</a>
+  <a href="#s2">2 設定</a>
+  <a href="#s3">3 使い方</a>
+  <a href="#s4">4 ペース</a>
+  <a href="#s5">5 その他</a>
+  <a href="#s6">6 困ったら</a>
+  <a href="#s7">7 確認</a>
+</nav>
+
+<main>
+
+<section id="s1">
+  <h2><span class="n">1</span>ホーム画面に追加する</h2>
+  <div class="body">
+    <a class="launch" href="nightwalker/">
+      <div class="l1">▶ Night Walker を開く</div>
+      <div class="l2">歩く人が使うアプリ／タップするとアプリが開きます</div>
+    </a>
+
+    <div class="note alert">
+      <span class="t">必ず Safari で開いてください</span>
+      LINEやChromeの中で開くと、ホーム画面に追加できません。LINEで開いた場合は、右下の「Safariで開く」を押してください。
+    </div>
+
+    <ol class="steps">
+      <li>Safariで、送られてきたURLを開く</li>
+      <li><b>Night Walker</b> をタップ</li>
+      <li>画面下の共有ボタン <span class="btn">⬆️</span> をタップ</li>
+      <li>メニューを下にスクロールして <span class="btn">ホーム画面に追加</span> をタップ</li>
+      <li>右上の <span class="btn">追加</span> をタップ</li>
+      <li>ホーム画面に月と歩く人のアイコンができるので、そこから起動する</li>
+    </ol>
+
+    <div class="note info">
+      <span class="t">以降は必ずアイコンから起動してください</span>
+      Safariのタブから開くと、正しく動作しないことがあります。
+    </div>
+
+    <h3>位置情報を許可する（必須）</h3>
+
+    <div class="note alert">
+      <span class="t">「許可」を選んでください</span>
+      アプリを開くと「現在地の使用を許可しますか？」と聞かれます。かならず <b>「許可」</b> を選んでください。<br><br>
+      許可しないと、<b>ペースチェック・天気・保護者への位置の共有</b> が使えなくなります。
+    </div>
+
+    <div class="note warn">
+      <span class="t">まちがえて「許可しない」を選んでしまったら</span>
+      もう一度聞かれることはありません。次の手順で許可し直してください。<br><br>
+      <b>iPhone：</b><br>
+      設定 → プライバシーとセキュリティ → 位置情報サービス → Safari のWebサイト → 「このAppの使用中」<br><br>
+      <b>Android：</b><br>
+      設定 → アプリ → Chrome → 権限 → 位置情報 → 「アプリの使用中のみ許可」
+    </div>
+
+    <p>正しく許可できていれば、アプリ上部に <b>気温と湿度</b> が表示されます。表示されるまで20秒ほどかかることがあります。</p>
+  </div>
+</section>
+
+<section id="s2">
+  <h2><span class="n">2</span>最初の設定</h2>
+  <div class="body">
+    <p>アプリを開いたら、画面を<b>一番下までスクロール</b>して設定します。上から順に進めてください。</p>
+
+    <h3>① お名前</h3>
+    <p>名前を入れて <span class="btn">保存</span>。LINEの通知に「〇〇さんが到着しました」と表示されます。</p>
+
+    <h3>② 見守り共有（保護者と繋ぐ）</h3>
+
+    <div class="urlbox">
+      <div class="lb">ウェブアプリURL（長押しでコピー）</div>
+      <div class="u">★★ここにウェブアプリURLを貼り付けてください★★</div>
+      <div class="hint">上のURLを長押し → コピー → アプリの「スプレッドシートのウェブアプリURL」欄に貼り付けてください。</div>
+    </div>
+
+    <ol class="steps">
+      <li>上のURLをコピーして、「スプレッドシートのウェブアプリURL」欄に貼り付ける</li>
+      <li><span class="btn">ペアコードを作る</span> をタップ（NW-8F3K2Q のようなコードができます）</li>
+      <li><span class="btn">保存</span> をタップ</li>
+      <li><span class="btn">コードを送る</span> をタップして、LINEで保護者に送る</li>
+      <li><span class="btn">今すぐ送信してテスト</span> をタップ</li>
+      <li>「送信しました（○○:○○）」と出れば成功</li>
+    </ol>
+
+    <div class="note info">
+      <span class="t">ペアコードとは</span>
+      親子を結びつける合言葉です。このコードを知っている人だけが、あなたの進捗を見られます。<b>関係のない人には教えないでください。</b>
+    </div>
+
+    <h3>③ 親の電話番号</h3>
+    <p>緊急連絡用です。入れて <span class="btn">保存</span> すると、画面上の <span class="btn">📞 親に電話</span> が使えるようになります。</p>
+  </div>
+</section>
+
+<section id="s3">
+  <h2><span class="n">3</span>歩いている間の使い方</h2>
+  <div class="body">
+    <h3>これだけ覚えれば大丈夫</h3>
+    <ol class="steps">
+      <li>出発地点で、区間1のカードの <span class="btn">🚶 出発</span> を押す</li>
+      <li>次の休憩地点に着いたら、同じカードの <span class="btn">🏁 到着</span> を押す</li>
+      <li>休憩が終わったら、区間2のカードの <span class="btn">🚶 出発</span> を押す</li>
+      <li>以降、区間3・4…と同じことを繰り返す</li>
+    </ol>
+
+    <p>ボタンを押すと<b>その瞬間の時刻が記録され、LINEの送信画面が開きます。</b>送り先を選んで送信してください。保護者への進捗共有は自動で行われます。</p>
+
+    <div class="note warn">
+      <span class="t">LINEは送り先を選ぶ必要があります</span>
+      ボタンを押すとLINEが開きます。送りたい相手やグループを選んで、送信ボタンを押してください。2回目以降は「最近の送信先」から選べます。
+    </div>
+
+    <h3>画面の構成</h3>
+    <table>
+      <tr><th>タブ</th><th>内容</th></tr>
+      <tr><td>全体</td><td>全9区間を一覧で表示</td></tr>
+      <tr><td>区間別</td><td>1区間ずつ大きく表示（歩いている間はこちらが便利）</td></tr>
+      <tr><td>サマリー</td><td>グラフと記録一覧。歩き終わったあとに</td></tr>
+    </table>
+
+    <h3>時刻を間違えたとき</h3>
+    <p>カードの中の「実際出発」「実際到着」の欄をタップすると、時刻を直接直せます。右の <span class="btn">×</span> で消すこともできます。</p>
+  </div>
+</section>
+
+<section id="s4">
+  <h2><span class="n">4</span>ペースチェック</h2>
+  <div class="body">
+    <p><span class="btn">📊 ペースチェック</span> を押すと計測が始まります。<b>そのまま1分ほど歩き続けてください。</b>計測できると<b>音が鳴って</b>結果が出ます。</p>
+
+    <div class="note info">
+      <span class="t">音で判定が分かります</span>
+      画面を見なくても、鳴る音で速い・遅いが分かるようになっています。
+    </div>
+
+    <table>
+      <tr><th>結果</th><th>音</th><th>意味</th></tr>
+      <tr><td><span class="dot b"></span>順調</td><td>ポーン、ピーン<br>（上がる2音）</td><td>予定どおり</td></tr>
+      <tr><td><span class="dot y"></span>速すぎ</td><td>ピピピ<br>（高い音3回）</td><td>予定より1分/km以上速い</td></tr>
+      <tr><td><span class="dot r"></span>遅れ</td><td>ブー、ブーー<br>（低い2音）</td><td>予定より1分/km以上遅い</td></tr>
+    </table>
+
+    <div class="note warn">
+      <span class="t">押したあとは画面を消さないでください</span>
+      画面を消すとGPSの記録が止まり、計測できません。計測中はアプリを開いたままにしてください。
+    </div>
+
+    <h3>画面が消えてしまうときは</h3>
+    <p>設定の <span class="btn">画面を消さない</span> をオンにすると、スリープしなくなります。電池の消費は増えるので、計測が終わったら戻すのがおすすめです。</p>
+  </div>
+</section>
+
+<section id="s5">
+  <h2><span class="n">5</span>その他の機能</h2>
+  <div class="body">
+    <details>
+      <summary>📞 親に電話</summary>
+      <div class="dbody">登録した保護者の番号にすぐ発信します。設定で電話番号を登録しておいてください。</div>
+    </details>
+
+    <details>
+      <summary>📷 写真をLINEで送る</summary>
+      <div class="dbody">
+        カメラが開きます。撮影すると<b>共有画面</b>が出るので、そこから <b>LINE</b> を選んで送ってください。<br><br>
+        時刻と今いる地点が、説明文として自動で付きます。<br><br>
+        <b>共有画面が出ない・LINEが選べないときは</b><br>
+        画面に写真がそのまま表示されます。<br>
+        ① <span class="btn">写真を保存</span> を押す（または写真を長押しして保存）<br>
+        ② <span class="btn">文面をコピー</span> を押す<br>
+        ③ LINEアプリを開いて、写真と文面を送る<br><br>
+        撮影のあと何も起きないように見えたら、<b>画面を少し下にスクロール</b>してみてください。写真やメッセージが出ています。
+      </div>
+    </details>
+
+    <details>
+      <summary>🗺️ 全工程のルートを見る</summary>
+      <div class="dbody">全10地点を地図上に表示します。ピンは S（出発）→ ①〜⑧ → G（ゴール）の順です。ピンをタップすると場所の名前が出ます。</div>
+    </details>
+
+    <details>
+      <summary>🌤 天気・気温・湿度</summary>
+      <div class="dbody">画面上部に現在地の天気が出ます。タップすると天気アプリが開きます。夜の冷え込み対策にお使いください。</div>
+    </details>
+
+    <details>
+      <summary>💾 記録を保存する（サマリータブ）</summary>
+      <div class="dbody">
+        グラフと記録一覧をまとめたファイルを、端末に保存できます。<br><br>
+        保存したファイルはSafariで開けます。印刷メニューからPDFにすることもできます。
+      </div>
+    </details>
+
+    <details>
+      <summary>ペースの計画を切り替える</summary>
+      <div class="dbody">
+        上部の <span class="btn">通常ペース</span> / <span class="btn">1割速めペース</span> で計画を切り替えられます。<br><br>
+        入力した実際の時刻は共通なので、切り替えても消えません。
+      </div>
+    </details>
+  </div>
+</section>
+
+<section id="s6">
+  <h2><span class="n">6</span>困ったときは</h2>
+  <div class="body">
+    <div class="note alert">
+      <span class="t">いちばん大事なこと</span>
+      <b>画面を消すと、GPSの記録と保護者への自動送信が止まります。</b>
+      ただし、到着・出発ボタンを押したときは必ず送信されるので、休憩地点ごとに保護者へ届きます。
+    </div>
+
+    <table>
+      <tr><th>症状</th><th>対処</th></tr>
+      <tr><td>天気が出ない</td><td>20秒ほど待つ。それでも出なければ、設定 → プライバシーとセキュリティ → 位置情報サービス で許可を確認</td></tr>
+      <tr><td>ペースチェックが「計測中」のまま</td><td>1分ほど歩き続ける。建物の中や電波の悪い場所では測れません</td></tr>
+      <tr><td>音が鳴らない</td><td>マナーモードを解除し、音量を上げる</td></tr>
+      <tr><td>LINEが開かない</td><td>ホーム画面のアイコンから起動しているか確認</td></tr>
+      <tr><td>保護者に届かない</td><td>設定の「今すぐ送信してテスト」で確認。URLとペアコードが合っているか確認</td></tr>
+      <tr><td>記録を消したい</td><td>画面下部の「入力した実際の時刻をすべてリセット」</td></tr>
+    </table>
+
+    <h3>電池を長持ちさせるには</h3>
+    <ul>
+      <li><b>モバイルバッテリーの持参をおすすめします</b></li>
+      <li>使わないときは画面を消す</li>
+      <li>「画面を消さない」は、ペース計測のときだけオンにする</li>
+    </ul>
+  </div>
+</section>
+
+<section id="s7">
+  <h2><span class="n">7</span>当日までの確認</h2>
+  <div class="body">
+    <ul class="check">
+      <li>ホーム画面に追加した</li>
+      <li>位置情報を「許可」にした</li>
+      <li>お名前を登録した</li>
+      <li>URLとペアコードを保存した</li>
+      <li>「今すぐ送信してテスト」で「送信しました」と出た</li>
+      <li>保護者がNW watcherで受信できるか確認した</li>
+      <li>親の電話番号を登録した</li>
+      <li><b>屋外で10分ほど歩いて、ペースチェックが動くか確認した</b></li>
+      <li>LINEを1通送ってみた</li>
+      <li>モバイルバッテリーとケーブルを用意した</li>
+    </ul>
+
+    <div class="note warn">
+      <span class="t">屋外での動作確認は必ず行ってください</span>
+      当日に初めて使って不具合が見つかると、対処ができません。前日までに一度お試しください。
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Night Walker 使い方<br>2026 寮生Night Walk in 伊勢
+</footer>
+
+</body>
+</html>
