@@ -380,9 +380,7 @@
 
   <div class="lineManual">
     <div class="lineManualTitle">見守り共有（NW watcher へ進捗を送る）</div>
-    <div class="lineManualRow" style="margin-bottom:8px;">
-      <input type="text" id="watchUrlInput" placeholder="スプレッドシートのウェブアプリURL">
-    </div>
+    <div class="userNameNote" style="margin:0 0 10px;">保護者と繋ぐには、下のペアコードを作って伝えてください。</div>
     <div class="lineManualRow">
       <input type="text" id="pairCodeInput" placeholder="ペアコード（例：NW-8F3K2Q）">
       <button type="button" id="watchSaveBtn">保存</button>
@@ -1238,12 +1236,9 @@
     return (DEFAULT_WATCH_URL.indexOf("__") === 0) ? "" : DEFAULT_WATCH_URL;
   }
 
-  var WATCH_URL_KEY = "nightwalk2026_watchurl";
   var PAIR_KEY = "nightwalk2026_paircode";
-  function loadWatchUrl(){
-    try{ return localStorage.getItem(WATCH_URL_KEY) || defaultWatchUrl(); }
-    catch(e){ return defaultWatchUrl(); }
-  }
+  // 送信先URLはアプリに埋め込み済み。利用者が触る必要はない。
+  function loadWatchUrl(){ return defaultWatchUrl(); }
   function loadPairCode(){ try{ return localStorage.getItem(PAIR_KEY) || ""; }catch(e){ return ""; } }
   var watchUrl = loadWatchUrl();
   var pairCode = loadPairCode();
@@ -1960,15 +1955,11 @@
 
   // ---------- 見守り共有の設定 ----------
   document.getElementById("watchSaveBtn").addEventListener("click", function(){
-    watchUrl = document.getElementById("watchUrlInput").value.trim();
     pairCode = document.getElementById("pairCodeInput").value.trim().toUpperCase();
     document.getElementById("pairCodeInput").value = pairCode;
-    try{
-      localStorage.setItem(WATCH_URL_KEY, watchUrl);
-      localStorage.setItem(PAIR_KEY, pairCode);
-    }catch(e){}
-    if(!watchUrl || !pairCode){
-      setWatchStatus("URLとペアコードの両方を入力してください。", true);
+    try{ localStorage.setItem(PAIR_KEY, pairCode); }catch(e){}
+    if(!pairCode){
+      setWatchStatus("ペアコードを入力してください。", true);
     } else if(pairCode.length < 6){
       setWatchStatus("ペアコードは6文字以上にしてください。", true);
     } else {
@@ -1987,13 +1978,12 @@
       return;
     }
     var msg = "【NW watcher 設定用】\nペアコード： " + pairCode
-      + (watchUrl ? "\n共有URL： " + watchUrl : "")
-      + "\n\nNW watcher の設定画面に、この2つを入力してください。";
+      + "\n\nNW watcher の設定画面に、このペアコードを入力してください。";
     sendLineMessage(msg);
   });
   document.getElementById("watchTestBtn").addEventListener("click", function(){
     if(!watchUrl || !pairCode){
-      setWatchStatus("先にURLとペアコードを保存してください。", true);
+      setWatchStatus("先にペアコードを保存してください。", true);
       return;
     }
     setWatchStatus("送信中…", false);
@@ -2037,7 +2027,6 @@
 
   // ---------- 初期表示 ----------
   document.getElementById("userNameInput").value = userName;
-  document.getElementById("watchUrlInput").value = watchUrl;
   document.getElementById("pairCodeInput").value = pairCode;
   document.getElementById("parentTelInput").value = parentTel;
   updateParentTelNote();

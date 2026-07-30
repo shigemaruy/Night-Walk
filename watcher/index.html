@@ -179,12 +179,11 @@
 
   <div class="settings" id="settingsPanel" style="display:none;">
     <div class="t">接続設定</div>
-    <input type="text" id="urlInput" placeholder="スプレッドシートのウェブアプリURL">
     <input type="text" id="pairInput" placeholder="ペアコード（例：NW-8F3K2Q）">
     <input type="text" id="telInput" placeholder="子の電話番号（例：09012345678）">
     <button type="button" id="saveBtn">保存</button>
     <div class="note">
-      Night Walker 側と同じURL・ペアコードを設定してください。<br>
+      お子さんから届いたペアコードを入力してください。<br>
       設定はこの端末に保存されます。
     </div>
     <div class="t" style="margin-top:16px;">記録の管理</div>
@@ -294,10 +293,11 @@
     return (DEFAULT_WATCH_URL.indexOf("__") === 0) ? "" : DEFAULT_WATCH_URL;
   }
 
-  var K_URL="nwwatcher_url", K_PAIR="nwwatcher_pair", K_TEL="nwwatcher_tel";
+  var K_PAIR="nwwatcher_pair", K_TEL="nwwatcher_tel";
   function lsGet(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-  var cfgUrl=lsGet(K_URL) || defaultWatchUrl(), cfgPair=lsGet(K_PAIR), cfgTel=lsGet(K_TEL);
+  // 取得先URLはアプリに埋め込み済み。利用者が触る必要はない。
+  var cfgUrl=defaultWatchUrl(), cfgPair=lsGet(K_PAIR), cfgTel=lsGet(K_TEL);
 
   // ---------- 時刻ユーティリティ ----------
   function pad2(n){ return (n<10?"0":"")+n; }
@@ -388,7 +388,7 @@
 
   function fetchStatus(){
     if(!cfgUrl || !cfgPair){
-      setUpdateBar("err", "設定が未完了です。下の「⚙️ 設定を開く」からURLとペアコードを入力してください。");
+      setUpdateBar("err", "設定が未完了です。下の「⚙️ 設定を開く」からペアコードを入力してください。");
       return;
     }
     var url = cfgUrl + (cfgUrl.indexOf("?")>=0 ? "&" : "?") + "pair=" + encodeURIComponent(cfgPair);
@@ -593,11 +593,10 @@
     this.textContent= show ? "⚙️ 設定を閉じる" : "⚙️ 設定を開く";
   });
   document.getElementById("saveBtn").addEventListener("click", function(){
-    cfgUrl=document.getElementById("urlInput").value.trim();
     cfgPair=document.getElementById("pairInput").value.trim().toUpperCase();
     document.getElementById("pairInput").value=cfgPair;
     cfgTel=document.getElementById("telInput").value.trim();
-    lsSet(K_URL,cfgUrl); lsSet(K_PAIR,cfgPair); lsSet(K_TEL,cfgTel);
+    lsSet(K_PAIR,cfgPair); lsSet(K_TEL,cfgTel);
     setUpdateBar("err","保存しました。取得しています…");
     fetchStatus();
   });
@@ -606,7 +605,7 @@
   // WKWebView では標準の confirm() が表示されないため、独自の確認画面を使う
   document.getElementById("resetBtn").addEventListener("click", function(){
     if(!cfgUrl || !cfgPair){
-      setUpdateBar("err","先にURLとペアコードを保存してください。");
+      setUpdateBar("err","先にペアコードを保存してください。");
       return;
     }
     document.getElementById("confirmOverlay").classList.add("show");
@@ -649,7 +648,6 @@
   }
 
   // ---------- 初期表示 ----------
-  document.getElementById("urlInput").value=cfgUrl;
   document.getElementById("pairInput").value=cfgPair;
   document.getElementById("telInput").value=cfgTel;
   fetchStatus();
