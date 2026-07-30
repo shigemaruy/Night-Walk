@@ -294,7 +294,7 @@
 </header>
 
 <nav class="tabs">
-  <button id="tabOverviewBtn" class="active">全体（全工程）</button>
+  <button id="tabOverviewBtn" class="active">全体（全行程）</button>
   <button id="tabLegBtn">区間別</button>
   <button id="tabSummaryBtn">サマリー</button>
 </nav>
@@ -317,10 +317,10 @@
 <div class="photoStatus" id="photoStatus" style="display:none;"></div>
 <div class="photoFallback" id="photoFallback" style="display:none;"></div>
 
-<button class="fullRouteBtn" id="fullRouteBtn" type="button">🗺️ 全工程のルートを見る</button>
+<button class="fullRouteBtn" id="fullRouteBtn" type="button">🗺️ 全行程のルートを見る</button>
 <div class="fullRouteOverlay" id="fullRouteMapWrap" style="display:none;">
   <div class="fullRouteHeader">
-    <span class="title">全工程のルート（S〜①〜⑧〜G）</span>
+    <span class="title">全行程のルート（S〜①〜⑧〜G）</span>
     <button type="button" id="closeMapBtn" class="closeMapBtn">✕ 閉じる</button>
   </div>
   <div id="fullRouteMap"></div>
@@ -413,7 +413,7 @@
     ・「📊 ペースチェック」を押すと計測が始まります。<b>1分ほど歩き続けると音が鳴り</b>、結果が表示されます。予定ペースより1分/km以上遅いと赤、1分/km以上速いと黄、それ以外は青です。判定によって鳴る音が変わるので、画面を見なくても分かります。<br>
     ・実際の時刻の入力内容は、通常ペース版・1割速めペース版で共通です。<br>
     ・各区間の「ルート」から、その地点までの徒歩ルートを地図で表示できます。<br>
-    ・「全工程のルートを見る」から、関ドライブイン〜猿田彦神社までの全区間を地図で見られます。<br>
+    ・「全行程のルートを見る」から、関ドライブイン〜猿田彦神社までの全区間を地図で見られます。<br>
     ・上部の気温・湿度をタップすると、天気アプリが開きます。<br>
     ・<b>画面を消すと、GPSの記録と保護者への自動送信は止まります。</b>ペースを測るときは「画面を消さない」をオンにするか、アプリを開いたままにしてください。到着・出発ボタンを押したときは、その場で確実に送信されます。<br>
     ・「📞 親に電話」で、登録した親の番号にすぐ発信できます。<br>
@@ -520,7 +520,7 @@
       : "https://www.google.com/maps/dir/?api=1&destination=" + c.lat + "," + c.lng + "&travelmode=walking";
   }
 
-  // 全工程(出発〜ゴール、経由地8か所)の徒歩ルートURL(外部Apple Mapsアプリで開く用)。
+  // 全行程(出発〜ゴール、経由地8か所)の徒歩ルートURL(外部Apple Mapsアプリで開く用)。
   function fullRouteUrl(){
     var ids = [0,1,2,3,4,5,6,7,8,9];
     var coordsList = ids.map(function(id){
@@ -549,7 +549,7 @@
     return circled[id-1] || String(id);
   }
 
-  // 全工程の地図(アプリ内に埋め込み、初回表示時にだけ生成する)
+  // 全行程の地図(アプリ内に埋め込み、初回表示時にだけ生成する)
   var fullRouteMapInstance = null;
   function ensureFullRouteMap(){
     if(fullRouteMapInstance || typeof L === "undefined") return;
