@@ -226,6 +226,8 @@
   .photoFallback img{width:100%; border-radius:10px; display:block; margin-bottom:10px;}
   .photoFallback .cap{font-size:13px; font-weight:700; color:var(--navy); margin-bottom:10px;
     background:#f4f6f8; border-radius:8px; padding:9px 11px; -webkit-user-select:all; user-select:all;}
+  .photoFallback .fbMain{display:block; width:100%; background:#06C755; margin-bottom:9px;
+    padding:14px 6px; font-size:14.5px;}
   .photoFallback .fbRow{display:flex; gap:8px;}
   .photoFallback .fbBtn{flex:1; text-align:center; text-decoration:none; padding:11px 6px;
     background:var(--navy); color:#fff; border:none; border-radius:9px;
@@ -1228,9 +1230,9 @@
   // Content-Type を text/plain にしているのは、application/json だと
   // ブラウザが事前確認(プリフライト)を行い、Apps Script 側がそれに応答できず失敗するため。
   // 「ペアコード」で親子を紐づけるため、1つのスプレッドシートを複数の親子が同時に使える。
-  // ★配布前に、下の __WEBAPP_URL__ を Apps Script のウェブアプリURLに置き換えてください。
-  //   置き換えておくと、利用者はペアコードを入れるだけで設定が完了します。
-  var DEFAULT_WATCH_URL = "__WEBAPP_URL__";
+  // 送信先（Apps Script ウェブアプリURL）。設定済み。
+  //   変更する場合は、下の1行だけ書き換えてください。利用者からは見えません。
+  var DEFAULT_WATCH_URL = "https://script.google.com/macros/s/AKfycbzThRavDjZb_SnOh1jfFOTtciuD1ODOcxMCa24CJAM48R4ubtMSxYkY_WNPFUtsLuAs/exec";
   function defaultWatchUrl(){
     // 置き換えられていない場合は空として扱う
     return (DEFAULT_WATCH_URL.indexOf("__") === 0) ? "" : DEFAULT_WATCH_URL;
@@ -1863,9 +1865,9 @@
   }
 
   // ---------- 写真を撮ってLINEで送る ----------
-  // iOSでは navigator.share() を「操作の直後」に呼ぶ必要がある。
-  // 画像の縮小などを挟むと有効期限が切れて拒否されるため、
-  // 撮影直後に、撮った写真をそのまま共有する。
+  // iOSでは navigator.share() を「利用者がタップした直後」に呼ばないと拒否される。
+  // カメラを閉じた直後は操作とみなされないため、
+  // 撮影後は写真と送信ボタンを表示し、そのボタンのタップで共有を呼ぶ。
   function photoCaption(){
     var now = new Date();
     var hhmm = pad2(now.getHours())+":"+pad2(now.getMinutes());
@@ -1879,14 +1881,14 @@
     el.style.display = msg ? "block" : "none";
     el.className = "photoStatus" + (isErr ? " err" : "");
   }
-  function clearPhotoFallback(){
+  function clearPhotoPanel(){
     var el = document.getElementById("photoFallback");
     if(el){ el.style.display = "none"; el.innerHTML = ""; }
   }
 
   document.getElementById("photoSendBtn").addEventListener("click", function(){
     setPhotoStatus("");
-    clearPhotoFallback();
+    clearPhotoPanel();
     document.getElementById("photoInput").click();
   });
 
@@ -1894,60 +1896,77 @@
     var file = this.files && this.files[0];
     this.value = ""; // 同じ写真を続けて選べるようにする
     if(!file) return;
-
-    var caption = photoCaption();
-    var withText = { files:[file], text: caption };
-    var onlyFile = { files:[file] };
-
-    var payload = null;
-    if(navigator.canShare){
-      if(navigator.canShare(withText)) payload = withText;
-      else if(navigator.canShare(onlyFile)) payload = onlyFile;
-    }
-
-    if(!payload || !navigator.share){
-      showPhotoFallback(file, caption, "この端末では写真の共有に対応していません。");
-      return;
-    }
-
-    setPhotoStatus("共有先を選んでください…", false);
-    navigator.share(payload).then(function(){
-      setPhotoStatus("写真を送りました。", false);
-      setTimeout(function(){ setPhotoStatus(""); }, 4000);
-    }).catch(function(err){
-      if(err && err.name === "AbortError"){
-        setPhotoStatus(""); // ユーザーが取り消しただけ
-        return;
-      }
-      showPhotoFallback(file, caption, "共有できませんでした。下の写真を保存して、LINEから送ってください。");
-    });
+    showPhotoPanel(file, photoCaption());
   });
 
-  // 共有が使えなかったときの代替手段。写真を表示し、保存と文面のコピーができるようにする。
-  function showPhotoFallback(file, caption, msg){
-    setPhotoStatus(msg, true);
+  // 撮影した写真と、送信・保存のボタンを表示する
+  function showPhotoPanel(file, caption){
     var box = document.getElementById("photoFallback");
     if(!box) return;
     var url = URL.createObjectURL(file);
+
+    var canShareFile = false;
+    try{
+      canShareFile = !!(navigator.share && navigator.canShare && navigator.canShare({files:[file]}));
+    }catch(e){ canShareFile = false; }
+
     box.innerHTML =
       '<img src="'+url+'" alt="撮影した写真">'
-      + '<div class="cap" id="photoCap">'+caption+'</div>'
+      + '<div class="cap">'+caption+'</div>'
+      + (canShareFile
+          ? '<button type="button" class="fbBtn fbMain" id="photoShareBtn">📤 LINEなどに送る</button>'
+          : '')
       + '<div class="fbRow">'
       + '  <a class="fbBtn" id="photoSaveBtn" href="'+url+'" download="nightwalk.jpg">写真を保存</a>'
       + '  <button type="button" class="fbBtn" id="photoCopyBtn">文面をコピー</button>'
       + '</div>'
-      + '<div class="fbNote">写真を長押しして「”写真”に保存」でも保存できます。保存後、LINEアプリから送ってください。</div>';
+      + '<div class="fbNote">'
+      + (canShareFile
+          ? '「LINEなどに送る」を押すと共有画面が開きます。そこからLINEを選んでください。<br>'
+          : '')
+      + '共有画面が出ないときは、「写真を保存」と「文面をコピー」を使って、LINEアプリから送ってください。'
+      + '</div>';
     box.style.display = "block";
+    setPhotoStatus("写真が撮れました。下のボタンから送ってください。", false);
+
+    // 送信ボタン：ここでのタップは確実に「利用者の操作」とみなされる
+    var shareBtn = document.getElementById("photoShareBtn");
+    if(shareBtn){
+      shareBtn.addEventListener("click", function(){
+        var withText = { files:[file], text: caption };
+        var onlyFile = { files:[file] };
+        var payload = onlyFile;
+        try{
+          if(navigator.canShare && navigator.canShare(withText)) payload = withText;
+        }catch(e){}
+        try{
+          var pr = navigator.share(payload);
+          if(pr && pr.then){
+            pr.then(function(){
+              setPhotoStatus("送信しました。", false);
+            }).catch(function(err){
+              if(err && err.name === "AbortError"){ setPhotoStatus("", false); return; }
+              setPhotoStatus("共有できませんでした。「写真を保存」してLINEから送ってください。", true);
+            });
+          }
+        }catch(e){
+          setPhotoStatus("共有できませんでした。「写真を保存」してLINEから送ってください。", true);
+        }
+      });
+    }
 
     var copyBtn = document.getElementById("photoCopyBtn");
     if(copyBtn){
       copyBtn.addEventListener("click", function(){
-        var t = caption;
         if(navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(t).then(function(){
+          navigator.clipboard.writeText(caption).then(function(){
             copyBtn.textContent = "コピーしました";
             setTimeout(function(){ copyBtn.textContent = "文面をコピー"; }, 2000);
-          }).catch(function(){});
+          }).catch(function(){
+            setPhotoStatus("コピーできませんでした。上の文面を長押しして選択してください。", true);
+          });
+        } else {
+          setPhotoStatus("上の文面を長押しして選択・コピーしてください。", true);
         }
       });
     }
@@ -1958,7 +1977,9 @@
     pairCode = document.getElementById("pairCodeInput").value.trim().toUpperCase();
     document.getElementById("pairCodeInput").value = pairCode;
     try{ localStorage.setItem(PAIR_KEY, pairCode); }catch(e){}
-    if(!pairCode){
+    if(!watchUrl){
+      setWatchStatus("このアプリに送信先が設定されていません（配布時のURL設定もれ）。管理者にご連絡ください。", true);
+    } else if(!pairCode){
       setWatchStatus("ペアコードを入力してください。", true);
     } else if(pairCode.length < 6){
       setWatchStatus("ペアコードは6文字以上にしてください。", true);
@@ -1982,8 +2003,12 @@
     sendLineMessage(msg);
   });
   document.getElementById("watchTestBtn").addEventListener("click", function(){
-    if(!watchUrl || !pairCode){
-      setWatchStatus("先にペアコードを保存してください。", true);
+    if(!watchUrl){
+      setWatchStatus("このアプリに送信先が設定されていません（配布時のURL設定もれ）。管理者にご連絡ください。", true);
+      return;
+    }
+    if(!pairCode){
+      setWatchStatus("先にペアコードを作って保存してください。", true);
       return;
     }
     setWatchStatus("送信中…", false);

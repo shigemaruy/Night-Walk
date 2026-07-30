@@ -286,9 +286,9 @@
   }
 
   // ---------- 設定 ----------
-  // ★配布前に、下の __WEBAPP_URL__ を Apps Script のウェブアプリURLに置き換えてください。
-  //   置き換えておくと、利用者はペアコードを入れるだけで設定が完了します。
-  var DEFAULT_WATCH_URL = "__WEBAPP_URL__";
+  // 送信先（Apps Script ウェブアプリURL）。設定済み。
+  //   変更する場合は、下の1行だけ書き換えてください。利用者からは見えません。
+  var DEFAULT_WATCH_URL = "https://script.google.com/macros/s/AKfycbzThRavDjZb_SnOh1jfFOTtciuD1ODOcxMCa24CJAM48R4ubtMSxYkY_WNPFUtsLuAs/exec";
   function defaultWatchUrl(){
     return (DEFAULT_WATCH_URL.indexOf("__") === 0) ? "" : DEFAULT_WATCH_URL;
   }
