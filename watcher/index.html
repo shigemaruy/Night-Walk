@@ -839,8 +839,19 @@
     });
   }
 
-  // ボタンを押したら、まず選択肢を出す（勝手にアプリを開こうとしない）
-  document.getElementById("findBtn").addEventListener("click", showFindPanel);
+  // ボタンを押したら選択肢を出す。
+  // 万一パネルを出せなかった場合でも、確実に動くiCloudを開く。
+  document.getElementById("findBtn").addEventListener("click", function(){
+    try{
+      showFindPanel();
+      var el = document.getElementById("findPanel");
+      if(!el || el.className.indexOf("show") < 0){
+        openExternal("https://www.icloud.com/find/");
+      }
+    }catch(e){
+      openExternal("https://www.icloud.com/find/");
+    }
+  });
   document.getElementById("callBtn").addEventListener("click", function(){
     var tel = curKid().tel;
     if(!tel){
@@ -986,7 +997,7 @@
     return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
-  var APP_VERSION = "2.3.0";
+  var APP_VERSION = "2.3.1";
   var VER_SKIP_KEY = "nwwatcher_skipver";
 
   function showUpdateBar(newVer, notes){
