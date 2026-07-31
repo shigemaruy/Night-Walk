@@ -410,6 +410,13 @@
     return true;
   }
 
+  // iPhone専用の機能（「探す」など）は、他の端末では代わりのものを開く
+  function isIOS(){
+    var ua = navigator.userAgent || "";
+    return /iPad|iPhone|iPod/.test(ua)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
   function pinLabel(id){
     var last = route.points.length - 1;
     if(id===0) return "S";
@@ -1007,7 +1014,7 @@
     return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
-  var APP_VERSION = "2.4.0";
+  var APP_VERSION = "2.4.1";
   var VER_SKIP_KEY = "nwwatcher_skipver";
 
   function showUpdateBar(newVer, notes){
