@@ -1340,11 +1340,11 @@
         refreshAll();
         // 先に見守り側へ送る(LINE共有だとアプリが切り替わってしまうため)
         syncToWatcher(role, parseInt(id,10));
-        // 画面にメッセージを出してから、LINEの送信画面へ移る
-        showMilestone(role, parseInt(id,10), name);
-        setTimeout(function(){
-          sendLineMessage(buildQuickMessage(role, parseInt(id,10), name, hhmm));
-        }, 900);
+        // メッセージを表示し、「OK」を押したあとにLINEの送信画面へ移る
+        var lineText = buildQuickMessage(role, parseInt(id,10), name, hhmm);
+        showMilestone(role, parseInt(id,10), name, function(){
+          sendLineMessage(lineText);
+        });
       });
     });
     // ペースチェックボタン
@@ -2386,6 +2386,7 @@
   // 経過時間・予定とのズレ・ペースのズレから、状況に合った文面を選ぶ
 
   var msgTimer = null;
+  var msgOnClose = null;   // 「OK」を押したあとに行う処理
 
   // 状況をまとめて取り出す
   function milestoneContext(role, id){
@@ -2519,9 +2520,10 @@
     return h;
   }
 
-  function showToast(m){
+  function showToast(m, onClose){
     var el = document.getElementById("msgToast");
-    if(!el) return;
+    if(!el){ if(onClose) onClose(); return; }
+    msgOnClose = onClose || null;
     var statsHtml = (m.stats && m.stats.length)
       ? '<div class="msgStats">' + m.stats.map(esc).join("<br>") + '</div>' : '';
     el.innerHTML =
@@ -2532,24 +2534,29 @@
       + '  <div class="msgHead">'+esc(m.head)+'</div>'
       + '  <div class="msgSub">'+esc(m.sub)+'</div>'
       + statsHtml
-      + '  <button type="button" class="msgClose" id="msgCloseBtn">OK</button>'
+      + '  <button type="button" class="msgClose" id="msgCloseBtn">OK（LINEで知らせる）</button>'
       + '</div></div>';
     el.className = "msgToast show";
 
-    if(msgTimer) clearTimeout(msgTimer);
-    msgTimer = setTimeout(hideToast, 10000);
-    document.getElementById("msgCloseBtn").addEventListener("click", hideToast);
-    el.addEventListener("click", function(ev){ if(ev.target === el) hideToast(); });
+    // 自動では閉じない。「OK」を押したときだけ次へ進む。
+    if(msgTimer){ clearTimeout(msgTimer); msgTimer = null; }
+    document.getElementById("msgCloseBtn").addEventListener("click", function(){ hideToast(true); });
 
     playMsgSound(m.tone);
     if(navigator.vibrate){
       try{ navigator.vibrate(m.tone==="warn" ? [90,70,90] : [60,50,120]); }catch(e){}
     }
   }
-  function hideToast(){
+  function hideToast(runNext){
     var el = document.getElementById("msgToast");
     if(el) el.className = "msgToast";
     if(msgTimer){ clearTimeout(msgTimer); msgTimer = null; }
+    var cb = msgOnClose;
+    msgOnClose = null;
+    if(runNext && cb){
+      // 画面が閉じてからLINEへ移る
+      setTimeout(cb, 250);
+    }
   }
 
   // 中間地点の効果音（調子によって変える）
@@ -2620,7 +2627,7 @@
       + '</g></svg>';
   }
 
-  function showCelebration(kind, ctx){
+  function showCelebration(kind, ctx, onClose){
     var el = document.getElementById("celebrate");
     if(!el) return;
     var isGoal = (kind === "goal");
@@ -2657,13 +2664,14 @@
       + '<div class="celTitle">' + title + '</div>'
       + '<div class="celSub">' + sub + '</div>'
       + stat
-      + '<button type="button" class="celBtn" id="celCloseBtn">' + (isGoal ? "記録を見る" : "はじめる") + '</button>'
+      + '<button type="button" class="celBtn" id="celCloseBtn">OK（LINEで知らせる）</button>'
       + '</div>';
     el.className = "celebrate show";
 
     document.getElementById("celCloseBtn").addEventListener("click", function(){
       el.className = "celebrate";
-      if(isGoal) switchTab("summary");
+      if(isGoal) switchTab("summary");        // ゴールは記録画面へ
+      if(onClose) setTimeout(onClose, 250);   // 閉じてからLINEへ
     });
 
     playFanfare(isGoal);
@@ -2693,20 +2701,20 @@
   }
 
   // 到着・出発の記録時に呼ぶ入口
-  function showMilestone(role, id, name){
+  function showMilestone(role, id, name, onClose){
     var ctx = milestoneContext(role, id);
     if(ctx.isStart && role === "depart"){
-      showCelebration("start", ctx);
+      showCelebration("start", ctx, onClose);
       return;
     }
     if(ctx.isGoal && role === "arrive"){
-      showCelebration("goal", ctx);
+      showCelebration("goal", ctx, onClose);
       return;
     }
     var m = (role === "arrive")
       ? arriveMessage(ctx, name)
       : departMessage(ctx, name, (PLAN[id+1] ? PLAN[id+1].name : null));
-    showToast(m);
+    showToast(m, onClose);
   }
 
   // ==========================================================
@@ -3030,7 +3038,7 @@
   // 同じ場所に置いた version.json を見て、新しい版があれば知らせる。
   // 「更新」を押すと、保存済みの表示データを消してから読み込み直す。
   // 入力した記録や設定（localStorage）は消さない。
-  var APP_VERSION = "2.2.0";
+  var APP_VERSION = "2.3.0";
   var VER_SKIP_KEY = "nightwalk2026_skipver";
 
   function showUpdateBar(newVer, notes){

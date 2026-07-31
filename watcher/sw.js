@@ -3,7 +3,7 @@
  * アプリ本体を端末に保存し、電波が悪い場所でも起動できるようにする。
  * 地図タイル・天気・見守り送信は通信が必要なため、圏外では使えない。
  */
-var APP_VERSION = "2.2.0";
+var APP_VERSION = "2.3.0";
 var CACHE = "nw-watcher-v" + APP_VERSION;
 
 var ASSETS = [

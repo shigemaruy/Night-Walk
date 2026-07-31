@@ -802,6 +802,8 @@
     }
   }
 
+  // ホーム画面から起動したPWAでは、iOSが「探す」アプリの起動を受け付けないことがある。
+  // 確実に開けるのはブラウザで動くiCloudのため、そちらを主な手段として案内する。
   function showFindPanel(){
     var el = document.getElementById("findPanel");
     if(!el) return;
@@ -810,20 +812,24 @@
       '<div class="fpBox">'
       + '<div class="fpTitle">現在地を確認する</div>'
       + '<div class="fpNote">'
-      + (ios ? '「探す」アプリが開かない場合は、下のiCloudをお使いください。'
-             : 'お子さんがiPhoneの場合は、iCloudをお使いください。')
+      + 'iCloudはブラウザで開くため確実です。<br>'
+      + 'お子さんのApple IDでログインしてください。'
       + '</div>'
-      + (ios ? '<button type="button" class="fpBtn main" id="fpFindMy">「探す」アプリを開く</button>' : '')
-      + '<a class="fpBtn" href="https://www.icloud.com/find/" target="_blank" rel="noopener">iCloudで探す（iPhone向け）</a>'
-      + '<a class="fpBtn" href="https://www.google.com/android/find" target="_blank" rel="noopener">Googleで探す（Android向け）</a>'
+      + '<a class="fpBtn main" href="https://www.icloud.com/find/" target="_blank" rel="noopener">iCloudで探す（おすすめ）</a>'
+      + (ios ? '<button type="button" class="fpBtn" id="fpFindMy">「探す」アプリを開いてみる</button>' : '')
+      + '<a class="fpBtn" href="https://www.google.com/android/find" target="_blank" rel="noopener">Googleで探す（Android端末向け）</a>'
+      + '<div class="fpNote" id="fpMsg" style="margin:2px 0 10px"></div>'
       + '<button type="button" class="fpBtn cancel" id="fpClose">閉じる</button>'
       + '</div>';
     el.className = "findPanel show";
 
     var fm = document.getElementById("fpFindMy");
     if(fm) fm.addEventListener("click", function(){
-      openExternal("findmy://");
-      setTimeout(function(){ el.className = "findPanel"; }, 800);
+      var msg = document.getElementById("fpMsg");
+      // 起動できたかは判定できないため、開かなかった場合の案内を残す
+      if(msg) msg.textContent = "開かない場合は、上の「iCloudで探す」をお使いください。";
+      try{ window.location.href = "findmy://"; }catch(e){}
+      setTimeout(function(){ try{ openExternal("findmy://"); }catch(e){} }, 120);
     });
     document.getElementById("fpClose").addEventListener("click", function(){
       el.className = "findPanel";
@@ -833,15 +839,8 @@
     });
   }
 
-  document.getElementById("findBtn").addEventListener("click", function(){
-    if(isIOS()){
-      // まず「探す」を直接開いてみる。開かなかったときのために選択肢も出す。
-      openExternal("findmy://");
-      setTimeout(showFindPanel, 600);
-    } else {
-      showFindPanel();
-    }
-  });
+  // ボタンを押したら、まず選択肢を出す（勝手にアプリを開こうとしない）
+  document.getElementById("findBtn").addEventListener("click", showFindPanel);
   document.getElementById("callBtn").addEventListener("click", function(){
     var tel = curKid().tel;
     if(!tel){
@@ -987,7 +986,7 @@
     return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
-  var APP_VERSION = "2.2.0";
+  var APP_VERSION = "2.3.0";
   var VER_SKIP_KEY = "nwwatcher_skipver";
 
   function showUpdateBar(newVer, notes){
