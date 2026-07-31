@@ -80,7 +80,9 @@
   .progFill{height:100%; background:linear-gradient(90deg,var(--navy),var(--navy-light)); border-radius:8px; width:0;}
 
   .btnRow{display:flex; gap:10px; margin-bottom:14px;}
-  .actBtn{flex:1; padding:14px 6px; border:none; border-radius:12px; font-weight:800; font-size:14px; color:#fff;}
+  .actBtn{flex:1; padding:14px 6px; border:none; border-radius:12px; font-weight:800;
+    font-size:14px; color:#fff; text-align:center; text-decoration:none;
+    display:flex; align-items:center; justify-content:center; -webkit-appearance:none;}
   .actBtn.map{background:var(--navy);}
   .actBtn.find{background:#0a84ff;}
   .actBtn.call{background:var(--green);}
@@ -214,7 +216,7 @@
 
   <div class="btnRow">
     <button type="button" class="actBtn map" id="mapBtn">🗺️ 地図で見る</button>
-    <button type="button" class="actBtn find" id="findBtn">📍 探す</button>
+    <a class="actBtn find" id="findBtn" href="findmy://">📍 探す</a>
   </div>
   <div class="btnRow">
     <button type="button" class="actBtn call" id="callBtn">📞 電話</button>
@@ -238,6 +240,15 @@
       <b>複数のお子さんを登録すると、画面上部のタブで切り替えられます。</b><br>
       設定はこの端末に保存されます。
     </div>
+    <div class="t" style="margin-top:16px;">位置の確認方法</div>
+    <a class="fpBtn" href="findmy://">「探す」アプリを開く</a>
+    <a class="fpBtn" href="https://www.icloud.com/find/" target="_blank" rel="noopener">iCloudで探す</a>
+    <a class="fpBtn" href="https://www.google.com/android/find" target="_blank" rel="noopener">Googleで探す（Android端末）</a>
+    <div class="note">
+      ふだんは画面上の <b>📍 探す</b> をお使いください。<br>
+      開かない場合は、iPhoneのホーム画面から <b>「探す」アプリ</b> を直接開くのが確実です。
+    </div>
+
     <div class="t" style="margin-top:16px;">記録の管理</div>
     <button type="button" id="resetBtn" style="background:var(--red);">記録をリセット</button>
     <div class="note">
@@ -839,19 +850,18 @@
     });
   }
 
-  // ボタンを押したら選択肢を出す。
-  // 万一パネルを出せなかった場合でも、確実に動くiCloudを開く。
-  document.getElementById("findBtn").addEventListener("click", function(){
-    try{
-      showFindPanel();
-      var el = document.getElementById("findPanel");
-      if(!el || el.className.indexOf("show") < 0){
-        openExternal("https://www.icloud.com/find/");
-      }
-    }catch(e){
-      openExternal("https://www.icloud.com/find/");
+  // 「📍 探す」はリンク（aタグ）にしてあり、リンク先は findmy:// を指している。
+  // JavaScript から開こうとするとiOSに拒まれるため、利用者が直接タップする形にしている。
+  // Android等では「探す」アプリが無いので、リンク先を差し替える。
+  (function(){
+    var fb = document.getElementById("findBtn");
+    if(!fb) return;
+    if(!isIOS()){
+      fb.setAttribute("href", "https://www.google.com/android/find");
+      fb.setAttribute("target", "_blank");
+      fb.setAttribute("rel", "noopener");
     }
-  });
+  })();
   document.getElementById("callBtn").addEventListener("click", function(){
     var tel = curKid().tel;
     if(!tel){
@@ -997,7 +1007,7 @@
     return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
-  var APP_VERSION = "2.3.1";
+  var APP_VERSION = "2.4.0";
   var VER_SKIP_KEY = "nwwatcher_skipver";
 
   function showUpdateBar(newVer, notes){
