@@ -328,48 +328,72 @@
     display:block; width:100%; margin-top:8px; padding:9px; background:#e6e9ed;
     color:var(--navy); border:none; border-radius:9px; font-weight:800; font-size:12.5px;
   }
+
+  /* ---- 行程設定 ----
+     iOSでは time / date の入力欄が指定より縮まないため、
+     どの要素も「縮められる（min-width:0）」「折り返せる（flex-wrap）」ようにして
+     画面からはみ出さない作りにしている。 */
   .routeEditor{position:fixed; inset:0; z-index:250; background:var(--bg);
-    display:flex; flex-direction:column;}
-  .reHeader{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
-    padding:calc(env(safe-area-inset-top) + 9px) 14px 9px; background:var(--navy); color:#fff;}
-  .reHeader .title{font-weight:800; font-size:15px;}
-  .reHeadBtn{background:rgba(255,255,255,.18); color:#fff; border:none; border-radius:20px;
-    padding:7px 15px; font-weight:800; font-size:12.5px; margin-left:7px;}
+    display:flex; flex-direction:column; overflow:hidden;}
+  .routeEditor *{ box-sizing:border-box; }
+  .reHeader{flex:0 0 auto; display:flex; align-items:center; gap:8px;
+    padding:calc(env(safe-area-inset-top) + 9px) 12px 9px; background:var(--navy); color:#fff;}
+  .reHeader .title{flex:1; min-width:0; font-weight:800; font-size:14.5px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .reHeadBtn{flex:0 0 auto; background:rgba(255,255,255,.18); color:#fff; border:none;
+    border-radius:20px; padding:8px 13px; font-weight:800; font-size:12.5px;}
   .reHeadBtn.save{background:var(--green);}
-  .reBody{flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    padding:14px 14px 60px;}
+  .reBody{flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+    padding:14px 12px 70px; width:100%;}
   .reCard{background:#fff; border:1px solid var(--line); border-radius:13px;
-    padding:14px; margin-bottom:13px;}
+    padding:13px; margin-bottom:13px; width:100%;}
   .reCard h3{margin:0 0 10px; font-size:13.5px; font-weight:800; color:var(--navy);}
-  .reRow{display:flex; gap:8px; align-items:center; margin-bottom:8px;}
-  .reRow label{flex:0 0 76px; font-size:11.5px; font-weight:700; color:var(--sub);}
-  .reInput{flex:1; min-width:0; padding:9px 10px; border:1px solid #cbd2d9;
-    border-radius:8px; font-size:15px; font-weight:700; color:var(--navy); background:#fbfcfd;}
-  .reInput.sm{flex:0 0 88px; text-align:center;}
-  .reDel{flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:1px solid #f0c4c4;
-    background:#fdeaea; color:var(--red); font-weight:800; font-size:15px; line-height:1;}
-  .reAdd{width:100%; padding:10px; border:1px dashed #b9c3ce; background:#f7f9fb;
-    color:var(--navy); border-radius:9px; font-weight:800; font-size:12.5px; margin-top:4px;}
-  .rePt{border-bottom:1px dashed var(--line); padding-bottom:9px; margin-bottom:9px;}
+
+  /* 入力欄は必ず縮められるようにする */
+  .reInput{
+    width:100%; min-width:0; padding:9px 10px; border:1px solid #cbd2d9;
+    border-radius:8px; font-size:16px; font-weight:700; color:var(--navy);
+    background:#fbfcfd; -webkit-appearance:none; appearance:none;
+  }
+  .reInput[type=time], .reInput[type=date]{ -webkit-appearance:none; min-height:38px; }
+
+  /* ラベルは上に置く（横並びにすると狭い画面で溢れるため） */
+  .reFld{display:flex; flex-direction:column; gap:4px; min-width:0;}
+  .reFld > span{font-size:10.5px; color:var(--sub); font-weight:700;}
+  .reGrid{display:grid; grid-template-columns:repeat(auto-fit, minmax(132px, 1fr)); gap:9px;}
+
+  .reDel{flex:0 0 auto; width:34px; height:34px; border-radius:8px; border:1px solid #f0c4c4;
+    background:#fdeaea; color:var(--red); font-weight:800; font-size:16px; line-height:1;}
+  .reAdd{width:100%; padding:11px; border:1px dashed #b9c3ce; background:#f7f9fb;
+    color:var(--navy); border-radius:9px; font-weight:800; font-size:12.5px; margin-top:6px;}
+
+  .rePt{border-bottom:1px dashed var(--line); padding-bottom:11px; margin-bottom:11px;}
   .rePt:last-of-type{border-bottom:none;}
-  .rePtNo{font-size:11px; font-weight:800; color:#fff; background:var(--navy);
-    padding:2px 9px; border-radius:20px; margin-right:7px;}
-  .reLeg{border:1px solid var(--line); border-radius:10px; padding:11px; margin-bottom:10px;}
-  .reLegHead{font-size:12.5px; font-weight:800; color:var(--navy); margin-bottom:8px;
-    display:flex; justify-content:space-between; align-items:center;}
-  .reLegHead .t{font-size:11px; color:var(--sub); font-weight:700;}
-  .reGrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
-  .reFld{display:flex; flex-direction:column; gap:3px;}
-  .reFld span{font-size:10.5px; color:var(--sub); font-weight:700;}
-  .reNote{font-size:11px; color:var(--sub); line-height:1.65; margin-top:8px;}
+  .rePtTop{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .rePtNo{flex:0 0 auto; min-width:30px; text-align:center; font-size:11px; font-weight:800;
+    color:#fff; background:var(--navy); padding:5px 8px; border-radius:20px;}
+
+  .reLeg{border:1px solid var(--line); border-radius:10px; padding:11px; margin-bottom:11px;}
+  .reLegHead{margin-bottom:9px;}
+  .reLegHead .no{display:inline-block; font-size:11px; font-weight:800; color:#fff;
+    background:var(--navy-light); padding:3px 10px; border-radius:20px; margin-bottom:5px;}
+  .reLegHead .t{display:block; font-size:11.5px; color:var(--sub); font-weight:700;
+    line-height:1.55; word-break:break-word;}
+
+  .reDistRow{display:flex; gap:8px; align-items:flex-end; margin-bottom:9px;}
+  .reDistRow .reFld{flex:1 1 auto;}
+  .reAutoBtn{flex:0 0 auto; padding:9px 11px; border:1px solid var(--navy); background:#fff;
+    color:var(--navy); border-radius:8px; font-weight:800; font-size:11.5px; white-space:nowrap;
+    min-height:38px;}
+
+  .reNote{font-size:11px; color:var(--sub); line-height:1.65; margin-top:9px; word-break:break-word;}
   .reWarn{background:#fff7e2; border:1px solid #f0e0a8; border-radius:9px;
     padding:10px 12px; font-size:11.5px; color:#7a5c00; line-height:1.65; margin-bottom:12px;}
   .reTabs{display:flex; gap:6px; background:#e6e9ed; border-radius:10px; padding:4px; margin-bottom:11px;}
-  .reTabs button{flex:1; border:none; background:transparent; color:var(--navy);
-    font-weight:800; font-size:12.5px; padding:8px 4px; border-radius:8px;}
+  .reTabs button{flex:1 1 0; min-width:0; border:none; background:transparent; color:var(--navy);
+    font-weight:800; font-size:12px; padding:9px 4px; border-radius:8px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .reTabs button.active{background:var(--navy); color:#fff;}
-  .reAutoBtn{padding:8px 10px; border:1px solid var(--navy); background:#fff; color:var(--navy);
-    border-radius:8px; font-weight:800; font-size:11px; white-space:nowrap;}
 
   .fullRouteOverlay{
     position:fixed; inset:0; z-index:200; background:#fff;
@@ -2662,15 +2686,16 @@
 
     // 基本情報
     h += '<div class="reCard"><h3>基本情報</h3>'
-      + '<div class="reRow"><label>タイトル</label>'
+      + '<div class="reFld" style="margin-bottom:9px"><span>タイトル</span>'
       + '<input class="reInput" id="reTitle" type="text" value="'+esc(d.title)+'"></div>'
-      + '<div class="reRow"><label>日付</label>'
+      + '<div class="reFld" style="margin-bottom:9px"><span>日付</span>'
       + '<input class="reInput" id="reDate" type="date" value="'+esc(d.date)+'"></div>'
-      + '<div class="reRow"><label>計画1の名前</label>'
+      + '<div class="reGrid">'
+      + '<div class="reFld"><span>計画1の名前</span>'
       + '<input class="reInput" id="rePlan0" type="text" value="'+esc(d.plans[0].name)+'"></div>'
-      + '<div class="reRow"><label>計画2の名前</label>'
+      + '<div class="reFld"><span>計画2の名前</span>'
       + '<input class="reInput" id="rePlan1" type="text" value="'+esc(d.plans[1].name)+'"></div>'
-      + '</div>';
+      + '</div></div>';
 
     // 地点
     h += '<div class="reCard"><h3>地点（'+d.points.length+'か所／区間'+(d.points.length-1)+'）</h3>';
@@ -2678,7 +2703,7 @@
       var pt = d.points[i];
       var badge = i===0 ? "S" : (i===d.points.length-1 ? "G" : String(i));
       h += '<div class="rePt">'
-        + '<div class="reRow"><span class="rePtNo">'+badge+'</span>'
+        + '<div class="rePtTop"><span class="rePtNo">'+badge+'</span>'
         + '<input class="reInput" data-pt="'+i+'" data-f="name" type="text" value="'+esc(pt.name)+'">'
         + (d.points.length>2 ? '<button type="button" class="reDel" data-delpt="'+i+'">×</button>' : '')
         + '</div>'
@@ -2699,8 +2724,8 @@
       + '</div>';
 
     var plan = d.plans[rePlanTab];
-    h += '<div class="reRow"><label>出発時刻</label>'
-      + '<input class="reInput sm" id="reStart" type="time" value="'+esc(plan.start)+'"></div>';
+    h += '<div class="reFld" style="margin-bottom:11px"><span>出発時刻</span>'
+      + '<input class="reInput" id="reStart" type="time" value="'+esc(plan.start)+'"></div>';
 
     var deps = legDepartTimes(plan);
     for(var j=0;j<plan.legs.length;j++){
@@ -2712,11 +2737,13 @@
       var fromN = d.points[j] ? d.points[j].name : "";
       var toN   = d.points[j+1] ? d.points[j+1].name : "";
       h += '<div class="reLeg">'
-        + '<div class="reLegHead"><span>区間'+(j+1)+'</span>'
-        + '<span class="t">'+esc(fromN)+' → '+esc(toN)+'</span></div>'
-        + '<div class="reRow"><label>距離 km</label>'
-        + '<input class="reInput sm" data-leg="'+j+'" data-f="dist" type="text" inputmode="decimal" value="'+dist+'">'
-        + '<button type="button" class="reAutoBtn" data-autodist="'+j+'">自動計算</button></div>'
+        + '<div class="reLegHead"><span class="no">区間'+(j+1)+'</span>'
+        + '<span class="t">'+esc(fromN)+'<br>→ '+esc(toN)+'</span></div>'
+        + '<div class="reDistRow">'
+        + '<div class="reFld"><span>距離 km</span>'
+        + '<input class="reInput" data-leg="'+j+'" data-f="dist" type="text" inputmode="decimal" value="'+dist+'"></div>'
+        + '<button type="button" class="reAutoBtn" data-autodist="'+j+'">自動計算</button>'
+        + '</div>'
         + '<div class="reGrid">'
         + '<div class="reFld"><span>出発（自動）</span>'
         + '<input class="reInput" type="time" value="'+esc(deps[j])+'" disabled></div>'
@@ -2724,7 +2751,7 @@
         + '<input class="reInput" data-leg="'+j+'" data-f="arrive" type="time" value="'+esc(leg.arrive)+'"></div>'
         + '<div class="reFld"><span>ペース 分:秒/km</span>'
         + '<input class="reInput" data-leg="'+j+'" data-f="pace" type="text" inputmode="numeric" value="'+paceToStr(pace)+'"></div>'
-        + '<div class="reFld"><span>'+(isLast?"（休憩なし）":"休憩 分")+'</span>'
+        + '<div class="reFld"><span>'+(isLast?"休憩（なし）":"休憩 分")+'</span>'
         + (isLast ? '<input class="reInput" type="text" value="—" disabled>'
                   : '<input class="reInput" data-leg="'+j+'" data-f="rest" type="text" inputmode="numeric" value="'+(Number(leg.rest)||0)+'">')
         + '</div></div>'
@@ -2912,7 +2939,7 @@
   // 同じ場所に置いた version.json を見て、新しい版があれば知らせる。
   // 「更新」を押すと、保存済みの表示データを消してから読み込み直す。
   // 入力した記録や設定（localStorage）は消さない。
-  var APP_VERSION = "2.0.1";
+  var APP_VERSION = "2.1.0";
   var VER_SKIP_KEY = "nightwalk2026_skipver";
 
   function showUpdateBar(newVer, notes){

@@ -35,6 +35,23 @@
 
   main{padding:14px 16px 40px;}
 
+  .kidTabs{display:flex; gap:7px; margin-bottom:12px;}
+  .kidTabs button{flex:1 1 0; min-width:0; border:1px solid var(--line); background:#fff;
+    color:var(--sub); border-radius:12px; padding:9px 6px; font-weight:800;}
+  .kidTabs button.active{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .kidTabs .kn{display:block; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .kidTabs .km{display:block; font-size:10px; font-weight:700; opacity:.7; margin-top:2px;}
+
+  .kidRow{border:1px solid var(--line); border-radius:11px; padding:11px; margin-bottom:9px;}
+  .kidRow .hd{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .kidRow .hd .n{flex:1; font-size:12.5px; font-weight:800; color:var(--navy);}
+  .kidRow .del{flex:0 0 auto; width:32px; height:32px; border-radius:8px; border:1px solid #f0c4c4;
+    background:#fdeaea; color:var(--red); font-weight:800; font-size:15px;}
+  .kidRow input{margin-bottom:7px;}
+  .kidRow input:last-child{margin-bottom:0;}
+  .addKidBtn{width:100%; padding:11px; border:1px dashed #b9c3ce; background:#f7f9fb;
+    color:var(--navy); border-radius:9px; font-weight:800; font-size:12.5px; margin-bottom:10px;}
+
   .updateBar{
     margin-bottom:14px; padding:11px 14px; border-radius:12px; font-size:13px; font-weight:800;
     text-align:center; border:1.5px solid;
@@ -157,6 +174,7 @@
 </header>
 
 <main>
+  <div class="kidTabs" id="kidTabs" style="display:none;"></div>
   <div class="updateBar err" id="updateBar">設定を読み込んでいます…</div>
 
   <div class="bigCard">
@@ -198,12 +216,13 @@
   <button type="button" class="settingsToggle" id="settingsToggle">⚙️ 設定を開く</button>
 
   <div class="settings" id="settingsPanel" style="display:none;">
-    <div class="t">接続設定</div>
-    <input type="text" id="pairInput" placeholder="ペアコード（例：NW-8F3K2Q）">
-    <input type="text" id="telInput" placeholder="子の電話番号（例：09012345678）">
+    <div class="t">見守る子の設定</div>
+    <div id="kidList"></div>
+    <button type="button" class="addKidBtn" id="addKidBtn">＋ 子どもを追加</button>
     <button type="button" id="saveBtn">保存</button>
     <div class="note">
       お子さんから届いたペアコードを入力してください。<br>
+      <b>複数のお子さんを登録すると、画面上部のタブで切り替えられます。</b><br>
       設定はこの端末に保存されます。
     </div>
     <div class="t" style="margin-top:16px;">記録の管理</div>
@@ -381,11 +400,36 @@
     return (DEFAULT_WATCH_URL.indexOf("__") === 0) ? "" : DEFAULT_WATCH_URL;
   }
 
-  var K_PAIR="nwwatcher_pair", K_TEL="nwwatcher_tel";
+  var K_KIDS="nwwatcher_kids";
+  var K_PAIR="nwwatcher_pair", K_TEL="nwwatcher_tel";   // 旧形式（引き継ぎ用）
   function lsGet(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
   // 取得先URLはアプリに埋め込み済み。利用者が触る必要はない。
-  var cfgUrl=defaultWatchUrl(), cfgPair=lsGet(K_PAIR), cfgTel=lsGet(K_TEL);
+  var cfgUrl = defaultWatchUrl();
+
+  // 見守る子の一覧。1人でも複数でも同じ形で持つ。
+  //   [{pair:"NW-XXXXXX", name:"", tel:""}, ...]
+  function loadKids(){
+    try{
+      var raw = localStorage.getItem(K_KIDS);
+      if(raw){
+        var a = JSON.parse(raw);
+        if(a && a.length) return a;
+      }
+    }catch(e){}
+    // 旧形式（1人ぶん）からの引き継ぎ
+    var oldPair = lsGet(K_PAIR);
+    if(oldPair) return [{pair:oldPair, name:"", tel:lsGet(K_TEL)}];
+    return [{pair:"", name:"", tel:""}];
+  }
+  function saveKids(){
+    try{ localStorage.setItem(K_KIDS, JSON.stringify(kids)); }catch(e){}
+  }
+  var kids = loadKids();
+  var activeKid = 0;
+  function curKid(){ return kids[activeKid] || {pair:"",name:"",tel:""}; }
+  // 子ごとの受信データを保持する（切り替えを速くするため）
+  var dataByPair = {};
 
   // ---------- 時刻ユーティリティ ----------
   function pad2(n){ return (n<10?"0":"")+n; }
@@ -471,39 +515,104 @@
   }
 
   // ---------- 受信データ ----------
-  var latest = null;      // サーバから受け取った最新レコード
+  var latest = null;      // 表示中の子の最新レコード
   var lastFetchOk = false;
 
+  // 全員ぶんをまとめて取りに行き、表示中の子を描画する
   function fetchStatus(){
-    if(!cfgUrl || !cfgPair){
+    var valid = kids.filter(function(k){ return k.pair && k.pair.length >= 6; });
+    if(!cfgUrl || !valid.length){
       setUpdateBar("err", "設定が未完了です。下の「⚙️ 設定を開く」からペアコードを入力してください。");
+      renderKidTabs();
       return;
     }
-    var url = cfgUrl + (cfgUrl.indexOf("?")>=0 ? "&" : "?") + "pair=" + encodeURIComponent(cfgPair);
-    fetch(url, {method:"GET"})
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        if(!data || !data.ok){
-          setUpdateBar("err", "取得できませんでした（"+((data&&data.error)||"応答が不正です")+"）");
-          lastFetchOk=false;
-          return;
-        }
-        if(data.empty){
-          setUpdateBar("err", "まだ記録がありません。子の端末のNight Walkerから送信されると表示されます。");
-          lastFetchOk=false;
-          return;
-        }
-        latest = data;
-        lastFetchOk = true;
-        applyReceivedRoute(data.route);   // 子が行程を変えていれば追従する
-        actuals = data.actuals || {};
-        PLAN = (data.planKey==="fast") ? PLAN_FAST : PLAN_NORMAL;
-        render();
-      })
-      .catch(function(){
-        setUpdateBar("err", "通信できませんでした。電波状況をご確認ください。");
-        lastFetchOk=false;
+    var pending = valid.length;
+    valid.forEach(function(k){
+      var url = cfgUrl + (cfgUrl.indexOf("?")>=0 ? "&" : "?") + "pair=" + encodeURIComponent(k.pair);
+      fetch(url, {method:"GET"})
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if(data && data.ok && !data.empty){
+            dataByPair[k.pair] = data;
+            // 名前が未設定なら、子が登録した名前を使う
+            if(!k.name && data.name){ k.name = data.name; saveKids(); }
+          } else if(data && data.ok && data.empty){
+            dataByPair[k.pair] = {empty:true};
+          } else {
+            dataByPair[k.pair] = {error:(data && data.error) || "応答が不正です"};
+          }
+        })
+        .catch(function(){ dataByPair[k.pair] = {error:"通信できませんでした"}; })
+        .then(function(){
+          pending--;
+          if(pending === 0) showActiveKid();
+        });
+    });
+  }
+
+  // 表示中の子のデータを画面に反映する
+  function showActiveKid(){
+    renderKidTabs();
+    var k = curKid();
+    var d = dataByPair[k.pair];
+
+    if(!k.pair){
+      setUpdateBar("err", "ペアコードが未設定です。「⚙️ 設定を開く」から入力してください。");
+      clearDisplay(); latest=null; return;
+    }
+    if(!d){
+      setUpdateBar("err", "取得しています…");
+      return;
+    }
+    if(d.error){
+      setUpdateBar("err", "取得できませんでした（"+d.error+"）");
+      lastFetchOk=false; return;
+    }
+    if(d.empty){
+      setUpdateBar("err", "まだ記録がありません。子の端末のNight Walkerから送信されると表示されます。");
+      lastFetchOk=false; latest=null; clearDisplay(); return;
+    }
+
+    latest = d;
+    lastFetchOk = true;
+    applyReceivedRoute(d.route);        // 子が行程を変えていれば追従する
+    actuals = d.actuals || {};
+    PLAN = (d.planKey==="fast") ? PLAN_FAST : PLAN_NORMAL;
+    render();
+  }
+
+  // 子が2人以上いるときだけ、切り替えタブを出す
+  function renderKidTabs(){
+    var el = document.getElementById("kidTabs");
+    if(!el) return;
+    if(kids.length < 2){ el.style.display="none"; el.innerHTML=""; return; }
+    var h = "";
+    for(var i=0;i<kids.length;i++){
+      var k = kids[i];
+      var label = k.name || k.pair || ("子ども"+(i+1));
+      var d = dataByPair[k.pair];
+      var mark = "";
+      if(d && !d.error && !d.empty && d.updatedAt){
+        var ago = minutesAgo(d.updatedAt);
+        if(ago !== null) mark = (ago < 60) ? (Math.round(ago)+"分前") : (Math.floor(ago/60)+"時間前");
+      } else if(d && d.empty){ mark = "記録なし";
+      } else if(d && d.error){ mark = "取得失敗"; }
+      h += '<button type="button" data-kid="'+i+'" class="'+(i===activeKid?"active":"")+'">'
+        + '<span class="kn">'+escKid(label)+'</span>'
+        + (mark ? '<span class="km">'+escKid(mark)+'</span>' : '')
+        + '</button>';
+    }
+    el.innerHTML = h;
+    el.style.display = "flex";
+    Array.prototype.forEach.call(el.querySelectorAll("[data-kid]"), function(b){
+      b.addEventListener("click", function(){
+        activeKid = parseInt(this.getAttribute("data-kid"),10);
+        showActiveKid();
       });
+    });
+  }
+  function escKid(v){
+    return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
 
   function setUpdateBar(cls, text){
@@ -669,11 +778,12 @@
     }
   });
   document.getElementById("callBtn").addEventListener("click", function(){
-    if(!cfgTel){
+    var tel = curKid().tel;
+    if(!tel){
       setUpdateBar("err","電話番号が未設定です。設定から登録してください。");
       return;
     }
-    window.location.href="tel:"+cfgTel;
+    window.location.href="tel:"+tel;
   });
   document.getElementById("refreshBtn").addEventListener("click", function(){ fetchStatus(); });
 
@@ -683,11 +793,67 @@
     p.style.display= show ? "" : "none";
     this.textContent= show ? "⚙️ 設定を閉じる" : "⚙️ 設定を開く";
   });
+  // 設定画面の「見守る子」一覧を描く
+  function renderKidList(){
+    var el = document.getElementById("kidList");
+    if(!el) return;
+    var h = "";
+    for(var i=0;i<kids.length;i++){
+      var k = kids[i];
+      h += '<div class="kidRow">'
+        + '<div class="hd"><span class="n">'+(i+1)+'人目'+(k.name?"（"+escKid(k.name)+"）":"")+'</span>'
+        + (kids.length>1 ? '<button type="button" class="del" data-delkid="'+i+'">×</button>' : '')
+        + '</div>'
+        + '<input type="text" data-kid="'+i+'" data-f="pair" placeholder="ペアコード（例：NW-8F3K2Q）" value="'+escKid(k.pair)+'">'
+        + '<input type="text" data-kid="'+i+'" data-f="tel" inputmode="tel" placeholder="電話番号（例：09012345678）" value="'+escKid(k.tel)+'">'
+        + '</div>';
+    }
+    el.innerHTML = h;
+    Array.prototype.forEach.call(el.querySelectorAll("[data-kid]"), function(inp){
+      inp.addEventListener("change", function(){
+        var i = parseInt(this.getAttribute("data-kid"),10);
+        var f = this.getAttribute("data-f");
+        var v = this.value.trim();
+        if(f === "pair"){ v = v.toUpperCase(); this.value = v; }
+        kids[i][f] = v;
+      });
+    });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-delkid]"), function(b){
+      b.addEventListener("click", function(){
+        var i = parseInt(this.getAttribute("data-delkid"),10);
+        kids.splice(i,1);
+        if(activeKid >= kids.length) activeKid = kids.length-1;
+        saveKids(); renderKidList(); renderKidTabs();
+      });
+    });
+  }
+
+  document.getElementById("addKidBtn").addEventListener("click", function(){
+    if(kids.length >= 5){
+      setUpdateBar("err","登録できるのは5人までです。");
+      return;
+    }
+    kids.push({pair:"", name:"", tel:""});
+    renderKidList();
+  });
+
   document.getElementById("saveBtn").addEventListener("click", function(){
-    cfgPair=document.getElementById("pairInput").value.trim().toUpperCase();
-    document.getElementById("pairInput").value=cfgPair;
-    cfgTel=document.getElementById("telInput").value.trim();
-    lsSet(K_PAIR,cfgPair); lsSet(K_TEL,cfgTel);
+    // 入力欄の内容を取り込む（変更イベントが走っていない場合に備える）
+    var el = document.getElementById("kidList");
+    Array.prototype.forEach.call(el.querySelectorAll("[data-kid]"), function(inp){
+      var i = parseInt(inp.getAttribute("data-kid"),10);
+      var f = inp.getAttribute("data-f");
+      var v = inp.value.trim();
+      if(f === "pair") v = v.toUpperCase();
+      if(kids[i]) kids[i][f] = v;
+    });
+    // 空の行は捨てる（1人も残らない場合は空欄を1つ残す）
+    kids = kids.filter(function(k){ return k.pair; });
+    if(!kids.length) kids = [{pair:"", name:"", tel:""}];
+    if(activeKid >= kids.length) activeKid = 0;
+    saveKids();
+    renderKidList();
+    dataByPair = {};
     setUpdateBar("err","保存しました。取得しています…");
     fetchStatus();
   });
@@ -695,7 +861,7 @@
   // ---------- 記録のリセット ----------
   // WKWebView では標準の confirm() が表示されないため、独自の確認画面を使う
   document.getElementById("resetBtn").addEventListener("click", function(){
-    if(!cfgUrl || !cfgPair){
+    if(!cfgUrl || !curKid().pair){
       setUpdateBar("err","先にペアコードを保存してください。");
       return;
     }
@@ -708,12 +874,13 @@
     document.getElementById("confirmOverlay").classList.remove("show");
     setUpdateBar("err","リセットしています…");
     var url = cfgUrl + (cfgUrl.indexOf("?")>=0 ? "&" : "?")
-      + "pair=" + encodeURIComponent(cfgPair) + "&action=reset";
+      + "pair=" + encodeURIComponent(curKid().pair) + "&action=reset";
     fetch(url, {method:"GET"})
       .then(function(r){ return r.json(); })
       .then(function(data){
         if(data && data.ok){
           latest = null;
+          delete dataByPair[curKid().pair];
           actuals = {};
           if(kidMarker && mapInstance){ mapInstance.removeLayer(kidMarker); kidMarker = null; }
           clearDisplay();
@@ -739,8 +906,8 @@
   }
 
   // ---------- 初期表示 ----------
-  document.getElementById("pairInput").value=cfgPair;
-  document.getElementById("telInput").value=cfgTel;
+  renderKidList();
+  renderKidTabs();
   fetchStatus();
   setInterval(fetchStatus, 60*1000);
 
@@ -755,7 +922,7 @@
     return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
-  var APP_VERSION = "2.0.1";
+  var APP_VERSION = "2.1.0";
   var VER_SKIP_KEY = "nwwatcher_skipver";
 
   function showUpdateBar(newVer, notes){
