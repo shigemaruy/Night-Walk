@@ -116,6 +116,25 @@
 
   .hint{font-size:11px; color:var(--sub); line-height:1.6; padding:0 4px;}
 
+
+  /* ---- アプリの更新案内 ---- */
+  .updBar{
+    position:fixed; left:12px; right:12px; top:calc(env(safe-area-inset-top) + 10px);
+    z-index:500; display:none;
+    background:linear-gradient(135deg,#1c4a86,#2f6bb8); color:#fff;
+    border-radius:14px; padding:13px 15px; box-shadow:0 8px 26px rgba(10,20,42,.4);
+    animation:updIn .4s cubic-bezier(.2,.9,.3,1.25);
+  }
+  .updBar.show{display:flex; align-items:center; gap:11px;}
+  @keyframes updIn{from{transform:translateY(-130%); opacity:0}to{transform:translateY(0); opacity:1}}
+  .updBar .ic{flex:0 0 auto; font-size:22px;}
+  .updBar .tx{flex:1; min-width:0; font-size:12.5px; line-height:1.6; font-weight:700;}
+  .updBar .tx b{display:block; font-size:14px; margin-bottom:2px; color:#fff;}
+  .updBar button{flex:0 0 auto; border:none; border-radius:20px; font-weight:800;
+    font-size:12.5px; padding:9px 15px;}
+  .updBar .go{background:#fff; color:#12314f;}
+  .updBar .later{background:rgba(255,255,255,.2); color:#fff; padding:9px 11px;}
+  .verNote{font-size:10.5px; color:var(--sub); text-align:center; padding:6px 0 0; font-weight:600;}
   .modalOverlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none;
     align-items:center; justify-content:center; z-index:300; padding:24px;}
   .modalOverlay.show{display:flex;}
@@ -130,6 +149,7 @@
 </style>
 </head>
 <body>
+<div class="updBar" id="updBar"></div>
 
 <header>
   <h1 id="appTitle">NW watcher</h1>
@@ -193,6 +213,8 @@
       子の端末（Night Walker）に入力された時刻は消えません。
     </div>
   </div>
+
+  <div class="verNote" id="verNote"></div>
 
   <div class="hint">
     ・1分ごとに自動で最新状況を取得します。「🔄 更新」で手動取得もできます。<br>
@@ -722,12 +744,94 @@
   fetchStatus();
   setInterval(fetchStatus, 60*1000);
 
+
+  // ==========================================================
+  //  アプリの更新
+  // ==========================================================
+  // 同じ場所に置いた version.json を見て、新しい版があれば知らせる。
+  // 「更新」を押すと、保存済みの表示データを消してから読み込み直す。
+  // 入力した記録や設定（localStorage）は消さない。
+  function esc(v){
+    return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  var APP_VERSION = "2.0.1";
+  var VER_SKIP_KEY = "nwwatcher_skipver";
+
+  function showUpdateBar(newVer, notes){
+    var el = document.getElementById("updBar");
+    if(!el) return;
+    el.innerHTML =
+      '<div class="ic">🎁</div>'
+      + '<div class="tx"><b>新しいバージョンがあります</b>'
+      + 'v' + esc(APP_VERSION) + ' → v' + esc(newVer)
+      + (notes ? '<br>' + esc(notes) : '') + '</div>'
+      + '<button type="button" class="later" id="updLater">後で</button>'
+      + '<button type="button" class="go" id="updGo">更新</button>';
+    el.className = "updBar show";
+
+    document.getElementById("updLater").addEventListener("click", function(){
+      try{ localStorage.setItem(VER_SKIP_KEY, newVer); }catch(e){}
+      el.className = "updBar";
+    });
+    document.getElementById("updGo").addEventListener("click", function(){
+      el.innerHTML = '<div class="ic">⏳</div><div class="tx"><b>更新しています…</b>そのままお待ちください</div>';
+      doUpdate();
+    });
+  }
+
+  function doUpdate(){
+    try{ localStorage.removeItem(VER_SKIP_KEY); }catch(e){}
+    var jobs = [];
+    // 保存された表示データを消す（記録や設定は消さない）
+    if(window.caches && caches.keys){
+      jobs.push(caches.keys().then(function(ks){
+        return Promise.all(ks.map(function(k){ return caches.delete(k); }));
+      }).catch(function(){}));
+    }
+    // 旧版を配っている裏方を止める
+    if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
+      jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){
+        return Promise.all(rs.map(function(r){ return r.unregister(); }));
+      }).catch(function(){}));
+    }
+    Promise.all(jobs).then(function(){
+      setTimeout(function(){
+        // 同じURLだと古い内容が使われることがあるため、印を付けて読み込み直す
+        var u = location.href.split("#")[0].split("?")[0];
+        location.replace(u + "?v=" + Date.now());
+      }, 350);
+    });
+  }
+
+  function checkUpdate(){
+    var url = "../version.json?t=" + Date.now();
+    var opt = { cache: "no-store" };
+    fetch(url, opt).then(function(r){
+      if(!r.ok) throw new Error("no version file");
+      return r.json();
+    }).then(function(v){
+      if(!v || !v.version) return;
+      if(v.version === APP_VERSION) return;
+      var skipped = "";
+      try{ skipped = localStorage.getItem(VER_SKIP_KEY) || ""; }catch(e){}
+      if(skipped === v.version) return;   // 「後で」を選んだ版は出さない
+      showUpdateBar(v.version, v.notes || "");
+    }).catch(function(){ /* 圏外などでは何もしない */ });
+  }
+
   // ---------- サービスワーカー（オフライン動作用） ----------
   if("serviceWorker" in navigator){
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("sw.js").catch(function(){});
     });
   }
+  var vn = document.getElementById("verNote");
+  if(vn) vn.textContent = "NW watcher v" + APP_VERSION;
+  checkUpdate();
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible") checkUpdate();
+  });
   // 表示が古くならないよう、受信済みデータの経過時間表示だけは30秒ごとに更新する
   setInterval(function(){ if(latest) render(); }, 30*1000);
 
