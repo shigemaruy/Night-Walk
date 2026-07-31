@@ -235,6 +235,123 @@
   .photoFallback .fbNote{font-size:11px; color:var(--sub); margin-top:9px; line-height:1.6;}
   .quickActionBtn.photoSend{background:#06C755;}
   .quickActionBtn:disabled{background:#c6ccd3;}
+  /* ---- 到着・出発時のメッセージ ---- */
+  .msgToast{
+    position:fixed; left:14px; right:14px; bottom:calc(env(safe-area-inset-bottom) + 18px);
+    z-index:300; display:none;
+  }
+  .msgToast.show{display:block; animation:toastIn .45s cubic-bezier(.2,.9,.3,1.3);}
+  @keyframes toastIn{
+    0%{transform:translateY(120%) scale(.94); opacity:0;}
+    100%{transform:translateY(0) scale(1); opacity:1;}
+  }
+  .msgCard{
+    border-radius:18px; padding:16px 18px; color:#fff;
+    box-shadow:0 10px 30px rgba(10,20,42,.35);
+    display:flex; gap:13px; align-items:flex-start;
+  }
+  .msgCard.good{background:linear-gradient(135deg,#1e8e3e,#2fb45c);}
+  .msgCard.ok{background:linear-gradient(135deg,#1c4a86,#2f6bb8);}
+  .msgCard.warn{background:linear-gradient(135deg,#b06a00,#d99000);}
+  .msgIcon{flex:0 0 auto; font-size:30px; line-height:1.1;}
+  .msgBody{flex:1; min-width:0;}
+  .msgHead{font-size:16.5px; font-weight:800; line-height:1.45; margin-bottom:4px;}
+  .msgSub{font-size:12.5px; line-height:1.65; opacity:.94;}
+  .msgClose{flex:0 0 auto; background:rgba(255,255,255,.22); border:none; color:#fff;
+    width:26px; height:26px; border-radius:50%; font-weight:800; font-size:14px; line-height:1;}
+
+  /* ---- スタート・ゴールの演出 ---- */
+  .celebrate{
+    position:fixed; inset:0; z-index:400; display:none;
+    background:radial-gradient(circle at 50% 32%, #1b3566 0%, #0a142a 62%, #050a18 100%);
+    overflow:hidden;
+  }
+  .celebrate.show{display:block; animation:celFade .4s ease;}
+  @keyframes celFade{from{opacity:0}to{opacity:1}}
+  .celInner{
+    position:relative; z-index:3; height:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; padding:30px 24px;
+  }
+  .celArt{width:190px; height:190px; margin-bottom:6px;}
+  .celTitle{
+    font-size:31px; font-weight:800; color:#fff; letter-spacing:.03em; line-height:1.3;
+    text-shadow:0 3px 22px rgba(120,180,255,.75);
+    animation:celPop .75s cubic-bezier(.2,1.3,.4,1) both;
+  }
+  @keyframes celPop{0%{transform:scale(.5) rotate(-6deg); opacity:0}
+    60%{transform:scale(1.12) rotate(2deg); opacity:1} 100%{transform:scale(1) rotate(0)}}
+  .celSub{font-size:15px; color:#cfe0ff; margin-top:12px; line-height:1.8; font-weight:700;
+    animation:celPop .75s .2s cubic-bezier(.2,1.3,.4,1) both;}
+  .celStat{margin-top:18px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    border-radius:14px; padding:13px 18px; color:#fff; font-size:13.5px; line-height:1.9;
+    font-weight:700; animation:celPop .75s .4s cubic-bezier(.2,1.3,.4,1) both;}
+  .celBtn{margin-top:26px; background:#fff; color:#12314f; border:none; border-radius:26px;
+    padding:14px 40px; font-weight:800; font-size:15.5px;
+    animation:celPop .75s .6s cubic-bezier(.2,1.3,.4,1) both;}
+
+  .confetti{position:absolute; top:-14px; width:9px; height:15px; opacity:.95;
+    animation:confFall linear forwards;}
+  @keyframes confFall{
+    0%{transform:translateY(-30px) rotate(0deg); opacity:1;}
+    100%{transform:translateY(108vh) rotate(760deg); opacity:.25;}
+  }
+  .celStarBg{position:absolute; inset:0; z-index:1;}
+  .celStarBg i{position:absolute; background:#fff; border-radius:50%;
+    animation:twinkle 2.4s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.25; transform:scale(.8)} 50%{opacity:1; transform:scale(1.3)}}
+
+  .walkAnim{animation:walkBob 1s ease-in-out infinite;}
+  @keyframes walkBob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)}}
+  .glowRing{animation:ringPulse 2s ease-out infinite;}
+  @keyframes ringPulse{0%{r:18; opacity:.85} 100%{r:58; opacity:0}}
+
+  .routeEditBtn{
+    display:block; width:100%; margin-top:8px; padding:9px; background:#e6e9ed;
+    color:var(--navy); border:none; border-radius:9px; font-weight:800; font-size:12.5px;
+  }
+  .routeEditor{position:fixed; inset:0; z-index:250; background:var(--bg);
+    display:flex; flex-direction:column;}
+  .reHeader{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+    padding:calc(env(safe-area-inset-top) + 9px) 14px 9px; background:var(--navy); color:#fff;}
+  .reHeader .title{font-weight:800; font-size:15px;}
+  .reHeadBtn{background:rgba(255,255,255,.18); color:#fff; border:none; border-radius:20px;
+    padding:7px 15px; font-weight:800; font-size:12.5px; margin-left:7px;}
+  .reHeadBtn.save{background:var(--green);}
+  .reBody{flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:14px 14px 60px;}
+  .reCard{background:#fff; border:1px solid var(--line); border-radius:13px;
+    padding:14px; margin-bottom:13px;}
+  .reCard h3{margin:0 0 10px; font-size:13.5px; font-weight:800; color:var(--navy);}
+  .reRow{display:flex; gap:8px; align-items:center; margin-bottom:8px;}
+  .reRow label{flex:0 0 76px; font-size:11.5px; font-weight:700; color:var(--sub);}
+  .reInput{flex:1; min-width:0; padding:9px 10px; border:1px solid #cbd2d9;
+    border-radius:8px; font-size:15px; font-weight:700; color:var(--navy); background:#fbfcfd;}
+  .reInput.sm{flex:0 0 88px; text-align:center;}
+  .reDel{flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:1px solid #f0c4c4;
+    background:#fdeaea; color:var(--red); font-weight:800; font-size:15px; line-height:1;}
+  .reAdd{width:100%; padding:10px; border:1px dashed #b9c3ce; background:#f7f9fb;
+    color:var(--navy); border-radius:9px; font-weight:800; font-size:12.5px; margin-top:4px;}
+  .rePt{border-bottom:1px dashed var(--line); padding-bottom:9px; margin-bottom:9px;}
+  .rePt:last-of-type{border-bottom:none;}
+  .rePtNo{font-size:11px; font-weight:800; color:#fff; background:var(--navy);
+    padding:2px 9px; border-radius:20px; margin-right:7px;}
+  .reLeg{border:1px solid var(--line); border-radius:10px; padding:11px; margin-bottom:10px;}
+  .reLegHead{font-size:12.5px; font-weight:800; color:var(--navy); margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center;}
+  .reLegHead .t{font-size:11px; color:var(--sub); font-weight:700;}
+  .reGrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .reFld{display:flex; flex-direction:column; gap:3px;}
+  .reFld span{font-size:10.5px; color:var(--sub); font-weight:700;}
+  .reNote{font-size:11px; color:var(--sub); line-height:1.65; margin-top:8px;}
+  .reWarn{background:#fff7e2; border:1px solid #f0e0a8; border-radius:9px;
+    padding:10px 12px; font-size:11.5px; color:#7a5c00; line-height:1.65; margin-bottom:12px;}
+  .reTabs{display:flex; gap:6px; background:#e6e9ed; border-radius:10px; padding:4px; margin-bottom:11px;}
+  .reTabs button{flex:1; border:none; background:transparent; color:var(--navy);
+    font-weight:800; font-size:12.5px; padding:8px 4px; border-radius:8px;}
+  .reTabs button.active{background:var(--navy); color:#fff;}
+  .reAutoBtn{padding:8px 10px; border:1px solid var(--navy); background:#fff; color:var(--navy);
+    border-radius:8px; font-weight:800; font-size:11px; white-space:nowrap;}
+
   .fullRouteOverlay{
     position:fixed; inset:0; z-index:200; background:#fff;
     display:flex; flex-direction:column;
@@ -289,8 +406,8 @@
 <body>
 
 <header>
-  <h1>Night Walker</h1>
-  <div class="sub">名阪国道関ドライブイン → 猿田彦神社</div>
+  <h1 id="appTitle">Night Walker</h1>
+  <div class="sub" id="appSub">名阪国道関ドライブイン → 猿田彦神社</div>
 </header>
 
 <nav class="tabs">
@@ -305,6 +422,7 @@
     <button id="planFastBtn">1割速めペース</button>
   </div>
   <div class="planNote" id="planNote"></div>
+  <button type="button" class="routeEditBtn" id="routeEditBtn">🛠 行程設定</button>
 </div>
 
 <div class="weatherBar" id="weatherBar">現在地の気温・湿度を取得中…</div>
@@ -318,6 +436,20 @@
 <div class="photoFallback" id="photoFallback" style="display:none;"></div>
 
 <button class="fullRouteBtn" id="fullRouteBtn" type="button">🗺️ 全行程のルートを見る</button>
+<div class="msgToast" id="msgToast"></div>
+<div class="celebrate" id="celebrate"></div>
+
+<div class="routeEditor" id="routeEditor" style="display:none;">
+  <div class="reHeader">
+    <span class="title">🛠 行程設定</span>
+    <div>
+      <button type="button" id="reCancelBtn" class="reHeadBtn">閉じる</button>
+      <button type="button" id="reSaveBtn" class="reHeadBtn save">保存</button>
+    </div>
+  </div>
+  <div class="reBody" id="reBody"></div>
+</div>
+
 <div class="fullRouteOverlay" id="fullRouteMapWrap" style="display:none;">
   <div class="fullRouteHeader">
     <span class="title">全行程のルート（S〜①〜⑧〜G）</span>
@@ -444,42 +576,107 @@
 
   // ---------- 計画データ(2パターン) ----------
   // walkMin: 直前地点からこの地点までの計画歩行時間(分) / restMin: この地点での計画休憩時間(分)
-  var PLAN_NORMAL = [
-    {id:0, name:"出発：関ドライブイン",        dist:null, speed:null, walkMin:0,  restMin:0,  arrive:null,                depart:"2026-08-01T17:30", type:"start"},
-    {id:1, name:"①ファミマ 大里睦合町店",       dist:11.0, speed:5.0, walkMin:132,restMin:7,  arrive:"2026-08-01T19:42", depart:"2026-08-01T19:49", type:"stop"},
-    {id:2, name:"②セブン 津中央店",             dist:7.7,  speed:4.8, walkMin:96, restMin:12, arrive:"2026-08-01T21:25", depart:"2026-08-01T21:37", type:"stop"},
-    {id:3, name:"③セブン 津雲出本郷店",         dist:6.5,  speed:4.6, walkMin:85, restMin:12, arrive:"2026-08-01T23:02", depart:"2026-08-01T23:14", type:"stop"},
-    {id:4, name:"④ファミマ みくも中道店",       dist:5.0,  speed:4.4, walkMin:68, restMin:16, arrive:"2026-08-02T00:22", depart:"2026-08-02T00:38", type:"stop"},
-    {id:5, name:"⑤ローソン 松阪鎌田店",         dist:5.0,  speed:4.2, walkMin:71, restMin:20, arrive:"2026-08-02T01:49", depart:"2026-08-02T02:09", type:"stop"},
-    {id:6, name:"⑥セブン 松阪豊原町西店",       dist:5.7,  speed:4.0, walkMin:86, restMin:20, arrive:"2026-08-02T03:35", depart:"2026-08-02T03:55", type:"stop"},
-    {id:7, name:"⑦セブン 玉城世古店",           dist:6.3,  speed:3.8, walkMin:99, restMin:12, arrive:"2026-08-02T05:34", depart:"2026-08-02T05:46", type:"stop"},
-    {id:8, name:"⑧セブン 伊勢小俣宮前店",       dist:4.5,  speed:4.0, walkMin:68, restMin:7,  arrive:"2026-08-02T06:54", depart:"2026-08-02T07:01", type:"stop"},
-    {id:9, name:"ゴール：猿田彦神社",           dist:6.4,  speed:4.3, walkMin:89, restMin:0,  arrive:"2026-08-02T08:30", depart:null,               type:"goal"}
-  ];
+  // ==========================================================
+  //  行程データ（「行程設定」から変更できる）
+  // ==========================================================
+  // 初期値。利用者が変更すると localStorage に保存され、以後そちらが使われる。
+  var DEFAULT_ROUTE = {
+    title: "2026 Night Walk in 伊勢",
+    date: "2026-08-01",
+    points: [
+      {name:"S:関ドライブイン",              lat:34.840872,  lng:136.403097},
+      {name:"①ファミマ大里睦合町",            lat:34.7781029, lng:136.4775564},
+      {name:"②偕楽公園",                     lat:34.7328178, lng:136.5071246},
+      {name:"③ファミマ高茶屋小森店",          lat:34.670612,  lng:136.5164222},
+      {name:"④ファミマみくも中道店",          lat:34.621893,  lng:136.515962},
+      {name:"⑤ローソン松阪鎌田町店",          lat:34.5824774, lng:136.5350306},
+      {name:"⑥JAみえなか本店",               lat:34.5475938, lng:136.580018},
+      {name:"⑦しまむら玉城店",               lat:34.5164187, lng:136.6341734},
+      {name:"⑧セカンドストリート伊勢小俣店",   lat:34.4933832, lng:136.6728243},
+      {name:"G:猿田彦神社",                  lat:34.467004,  lng:136.720526}
+    ],
+    // 区間ごとの距離(km)。地点数-1 個。
+    dist: [11.0, 6.2, 7.5, 5.3, 5.0, 5.7, 6.1, 5.3, 6.3],
+    plans: [
+      { name:"9時着ペース",  start:"18:00",
+        legs:[ {arrive:"20:10",rest:20},{arrive:"21:50",rest:20},{arrive:"23:40",rest:20},
+               {arrive:"01:00",rest:20},{arrive:"02:20",rest:20},{arrive:"04:00",rest:20},
+               {arrive:"05:40",rest:20},{arrive:"07:10",rest:20},{arrive:"09:00",rest:0} ] },
+      { name:"8時半着ペース", start:"18:00",
+        legs:[ {arrive:"20:10",rest:20},{arrive:"21:50",rest:20},{arrive:"23:40",rest:20},
+               {arrive:"01:00",rest:20},{arrive:"02:20",rest:20},{arrive:"04:00",rest:20},
+               {arrive:"05:40",rest:20},{arrive:"07:10",rest:20},{arrive:"08:30",rest:0} ] }
+    ]
+  };
 
-  // 1割速めペース版(歩行ペースを1割短縮し、浮いた時間を休憩へ。休憩は最大25分に制限し到着は8:30のまま)
-  var PLAN_FAST = [
-    {id:0, name:"出発：関ドライブイン",        dist:null, speed:null,  walkMin:0,  restMin:0,  arrive:null,                depart:"2026-08-01T17:30", type:"start"},
-    {id:1, name:"①ファミマ 大里睦合町店",       dist:11.0, speed:5.56, walkMin:119,restMin:12, arrive:"2026-08-01T19:29", depart:"2026-08-01T19:41", type:"stop"},
-    {id:2, name:"②セブン 津中央店",             dist:7.7,  speed:5.33, walkMin:87, restMin:21, arrive:"2026-08-01T21:08", depart:"2026-08-01T21:29", type:"stop"},
-    {id:3, name:"③セブン 津雲出本郷店",         dist:6.5,  speed:5.11, walkMin:76, restMin:21, arrive:"2026-08-01T22:45", depart:"2026-08-01T23:06", type:"stop"},
-    {id:4, name:"④ファミマ みくも中道店",       dist:5.0,  speed:4.89, walkMin:61, restMin:25, arrive:"2026-08-02T00:07", depart:"2026-08-02T00:32", type:"stop"},
-    {id:5, name:"⑤ローソン 松阪鎌田店",         dist:5.0,  speed:4.67, walkMin:64, restMin:25, arrive:"2026-08-02T01:36", depart:"2026-08-02T02:01", type:"stop"},
-    {id:6, name:"⑥セブン 松阪豊原町西店",       dist:5.7,  speed:4.44, walkMin:77, restMin:25, arrive:"2026-08-02T03:18", depart:"2026-08-02T03:43", type:"stop"},
-    {id:7, name:"⑦セブン 玉城世古店",           dist:6.3,  speed:4.22, walkMin:90, restMin:21, arrive:"2026-08-02T05:13", depart:"2026-08-02T05:34", type:"stop"},
-    {id:8, name:"⑧セブン 伊勢小俣宮前店",       dist:4.5,  speed:4.44, walkMin:61, restMin:25, arrive:"2026-08-02T06:35", depart:"2026-08-02T07:00", type:"stop"},
-    {id:9, name:"ゴール：猿田彦神社",           dist:6.4,  speed:4.29, walkMin:90, restMin:0,  arrive:"2026-08-02T08:30", depart:null,               type:"goal"}
-  ];
-
-  function prepPlanDates(arr){
-    arr.forEach(function(p){
-      p.arriveDate = p.arrive ? new Date(p.arrive) : null;
-      p.departDate = p.depart ? new Date(p.depart) : null;
-    });
-    return arr;
+  var ROUTE_KEY = "nightwalk2026_route";
+  function loadRoute(){
+    try{
+      var raw = localStorage.getItem(ROUTE_KEY);
+      if(!raw) return JSON.parse(JSON.stringify(DEFAULT_ROUTE));
+      var r = JSON.parse(raw);
+      if(!r || !r.points || !r.plans || !r.dist) throw new Error("bad");
+      return r;
+    }catch(e){ return JSON.parse(JSON.stringify(DEFAULT_ROUTE)); }
   }
-  prepPlanDates(PLAN_NORMAL);
-  prepPlanDates(PLAN_FAST);
+  function saveRoute(r){
+    try{ localStorage.setItem(ROUTE_KEY, JSON.stringify(r)); }catch(e){}
+  }
+  var route = loadRoute();
+
+  // "HH:MM" を基準日時以降の最初のその時刻に変換する（日付をまたぐ行程に対応）
+  function timeAfter(baseDate, hhmm){
+    var pp = String(hhmm||"").split(":");
+    var hh = parseInt(pp[0],10), mm = parseInt(pp[1],10);
+    if(isNaN(hh)||isNaN(mm)) return null;
+    var d = new Date(baseDate.getTime());
+    d.setHours(hh, mm, 0, 0);
+    if(d.getTime() <= baseDate.getTime()) d.setDate(d.getDate()+1);
+    return d;
+  }
+
+  // 行程データから、アプリが使う計画配列を組み立てる
+  function buildPlan(cfg, planIdx){
+    var plan = cfg.plans[planIdx];
+    var out = [];
+    var base = new Date(cfg.date + "T00:00:00");
+    var sp = String(plan.start||"18:00").split(":");
+    var startD = new Date(base.getTime());
+    startD.setHours(parseInt(sp[0],10)||0, parseInt(sp[1],10)||0, 0, 0);
+
+    out.push({ id:0, name:cfg.points[0] ? cfg.points[0].name : "出発",
+               dist:null, speed:null, walkMin:0, restMin:0,
+               arriveDate:null, departDate:startD, type:"start" });
+
+    var prevDepart = startD;
+    var n = plan.legs.length;
+    for(var i=0;i<n;i++){
+      var leg = plan.legs[i];
+      var arriveD = timeAfter(prevDepart, leg.arrive);
+      if(!arriveD) arriveD = new Date(prevDepart.getTime()+60*60000);
+      var walkMin = (arriveD - prevDepart)/60000;
+      var dist = Number(cfg.dist[i]) || 0;
+      var isGoal = (i === n-1);
+      var rest = isGoal ? 0 : (Number(leg.rest)||0);
+      var departD = isGoal ? null : new Date(arriveD.getTime()+rest*60000);
+      out.push({
+        id: i+1,
+        name: cfg.points[i+1] ? cfg.points[i+1].name : ("地点"+(i+1)),
+        dist: dist,
+        speed: (walkMin>0 && dist>0) ? dist/(walkMin/60) : null,
+        walkMin: walkMin,
+        restMin: rest,
+        arriveDate: arriveD,
+        departDate: departD,
+        type: isGoal ? "goal" : "stop"
+      });
+      prevDepart = departD;
+    }
+    return out;
+  }
+
+  var PLAN_NORMAL = buildPlan(route, 0);   // 1つめの計画
+  var PLAN_FAST   = buildPlan(route, 1);   // 2つめの計画
 
   var PLAN_KEY_STORAGE = "nightwalk2026_planKey";
   var currentPlanKey = "normal";
@@ -498,19 +695,31 @@
       || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
-  // 各地点の緯度経度(地図で開くためのデータ。id:0=出発〜9=ゴール、両プラン共通)
-  var COORDS = {
-    0: {lat:34.840872, lng:136.403097, label:"名阪関ドライブイン"},
-    1: {lat:34.778103, lng:136.477556, label:"ファミマ大里睦合町店"},
-    2: {lat:34.720381, lng:136.510217, label:"セブン津中央店"},
-    3: {lat:34.665712, lng:136.519794, label:"セブン津雲出本郷店"},
-    4: {lat:34.621893, lng:136.515962, label:"ファミマみくも中道店"},
-    5: {lat:34.582477, lng:136.535031, label:"ローソン松阪鎌田店"},
-    6: {lat:34.548534, lng:136.579118, label:"セブン松阪豊原町西店"},
-    7: {lat:34.516169, lng:136.634775, label:"セブン玉城世古店"},
-    8: {lat:34.492687, lng:136.674677, label:"セブン伊勢小俣宮前店"},
-    9: {lat:34.467004, lng:136.720526, label:"猿田彦神社"}
-  };
+  // 各地点の緯度経度（行程データから作る）
+  var COORDS = {};
+  function rebuildCoords(){
+    COORDS = {};
+    for(var i=0;i<route.points.length;i++){
+      var pt = route.points[i];
+      COORDS[i] = { lat:Number(pt.lat), lng:Number(pt.lng),
+                    label: pt.name.replace(/^[SG]:/,"").replace(/^[①②③④⑤⑥⑦⑧⑨⑩]/,"") };
+    }
+  }
+  rebuildCoords();
+
+  // 2地点間の直線距離(km)。距離の自動計算に使う。
+  function coordDistKm(a, b){
+    if(!a || !b) return 0;
+    var R = 6371;
+    var dLat = (b.lat-a.lat)*Math.PI/180;
+    var dLng = (b.lng-a.lng)*Math.PI/180;
+    var x = Math.sin(dLat/2)*Math.sin(dLat/2)
+      + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+  }
+  // 直線距離から道のりを見積もる係数（実測との比較で決めた値）
+  var ROAD_FACTOR = 1.15;
+
   function mapUrlFor(id){
     var c = COORDS[id];
     if(!c) return null;
@@ -522,7 +731,7 @@
 
   // 全行程(出発〜ゴール、経由地8か所)の徒歩ルートURL(外部Apple Mapsアプリで開く用)。
   function fullRouteUrl(){
-    var ids = [0,1,2,3,4,5,6,7,8,9];
+    var ids = Object.keys(COORDS).map(Number).sort(function(a,b){return a-b;});
     var coordsList = ids.map(function(id){
       var c = COORDS[id];
       return c.lat + "," + c.lng;
@@ -544,8 +753,8 @@
   // 各地点のピン表示ラベル(出発=S、休憩地点=①〜⑧、ゴール=G)
   function pinLabel(id){
     if(id === 0) return "S";
-    if(id === 9) return "G";
-    var circled = ["①","②","③","④","⑤","⑥","⑦","⑧"];
+    if(id === PLAN.length-1) return "G";
+    var circled = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"];
     return circled[id-1] || String(id);
   }
 
@@ -559,11 +768,11 @@
     }).addTo(map);
     L.control.attribution({prefix:false}).addAttribution("© OpenStreetMap").addTo(map);
 
-    var ids = [0,1,2,3,4,5,6,7,8,9];
+    var ids = Object.keys(COORDS).map(Number).sort(function(a,b){return a-b;});
     var latlngs = [];
     ids.forEach(function(id){
       var c = COORDS[id];
-      var isStart = id === 0, isGoal = id === 9;
+      var isStart = id === 0, isGoal = id === ids[ids.length-1];
       var cls = "routePin" + (isStart? " start" : (isGoal? " goal" : ""));
       var icon = L.divIcon({
         className: "",
@@ -661,9 +870,15 @@
     if(!nb || !fb) return;
     nb.classList.toggle("active", currentPlanKey==="normal");
     fb.classList.toggle("active", currentPlanKey==="fast");
-    document.getElementById("planNote").textContent = currentPlanKey==="fast"
-      ? "1割速めペース版：純歩行時間 約12時間05分／休憩合計 2時間55分(休憩上限25分)"
-      : "通常ペース版：純歩行時間 約13時間14分／休憩合計 約1時間46分";
+    nb.textContent = route.plans[0].name;
+    fb.textContent = route.plans[1].name;
+    var pl = (currentPlanKey==="fast") ? PLAN_FAST : PLAN_NORMAL;
+    var km=0, walk=0, rest=0;
+    for(var i=1;i<pl.length;i++){ km+=pl[i].dist||0; walk+=pl[i].walkMin||0; rest+=pl[i].restMin||0; }
+    document.getElementById("planNote").textContent =
+      (currentPlanKey==="fast" ? route.plans[1].name : route.plans[0].name)
+      + "：全" + (pl.length-1) + "区間 " + km.toFixed(1) + "km ／ 歩行 " + fmtDurationMin(walk)
+      + " ／ 休憩 " + fmtDurationMin(rest);
   }
 
   // ---------- 時刻ユーティリティ ----------
@@ -848,7 +1063,8 @@
     }
 
     var goalPredicted = goalRow.actualArrive || goalRow.predictedArrive;
-    var goalDelta = fmtDelta(goalPredicted && PLAN[9].arriveDate ? (goalPredicted-PLAN[9].arriveDate)/60000 : null);
+    var goalPlan = PLAN[PLAN.length-1];
+    var goalDelta = fmtDelta(goalPredicted && goalPlan && goalPlan.arriveDate ? (goalPredicted-goalPlan.arriveDate)/60000 : null);
     var goalHtml = '<div class="row"><span class="label">ゴール到着予想（猿田彦神社）</span>'+
       '<div class="valueLine"><span class="value big">'+fmtTimeWithDate(goalPredicted, PLAN[0].departDate)+'</span>'+
       (goalDelta? ' <span class="delta '+goalDelta.cls+'">('+goalDelta.text+')</span>':'')+'</div></div>';
@@ -1031,7 +1247,11 @@
         refreshAll();
         // 先に見守り側へ送る(LINE共有だとアプリが切り替わってしまうため)
         syncToWatcher(role, parseInt(id,10));
-        sendLineMessage(buildQuickMessage(role, parseInt(id,10), name, hhmm));
+        // 画面にメッセージを出してから、LINEの送信画面へ移る
+        showMilestone(role, parseInt(id,10), name);
+        setTimeout(function(){
+          sendLineMessage(buildQuickMessage(role, parseInt(id,10), name, hhmm));
+        }, 900);
       });
     });
     // ペースチェックボタン
@@ -1328,7 +1548,8 @@
       lat: pos ? pos.lat : null,
       lng: pos ? pos.lng : null,
       actuals: actuals,
-      weather: weatherLog
+      weather: weatherLog,
+      route: route      // 行程を変えても親側に反映されるよう一緒に送る
     };
     try{
       fetch(watchUrl, {
@@ -1587,8 +1808,9 @@
     if(avgPace) html += '全体の平均ペース：'+formatPaceMinSec(avgPace)+'<br>';
     if(goalRow.actualArrive){
       html += 'ゴール到着：'+fmtTime(goalRow.actualArrive);
-      var gd = fmtDelta((goalRow.actualArrive-PLAN[9].arriveDate)/60000);
-      if(gd) html += '（予定 '+fmtTime(PLAN[9].arriveDate)+' に対し '+gd.text+'）';
+      var gp = PLAN[PLAN.length-1];
+      var gd = gp && gp.arriveDate ? fmtDelta((goalRow.actualArrive-gp.arriveDate)/60000) : null;
+      if(gd) html += '（予定 '+fmtTime(gp.arriveDate)+' に対し '+gd.text+'）';
     }
     html += '</div></div>';
 
@@ -2058,11 +2280,608 @@
   updateUserNameNote();
   updateWakeUI();
   if(wakePref) applyWakePref();
+  applyRouteTitle();
   updatePlanSwitcherUI();
   refreshAll();
   loadWeather();
   setInterval(loadWeather, 10*60*1000); // 10分ごとに天候を更新
   startPositionTracking();
+
+  // ==========================================================
+  //  到着・出発時のメッセージ
+  // ==========================================================
+  // 経過時間・予定とのズレ・ペースのズレから、状況に合った文面を選ぶ
+
+  var msgTimer = null;
+
+  // 状況をまとめて取り出す
+  function milestoneContext(role, id){
+    var sched = computeSchedule();
+    var rows = sched.rows;
+    var row = rows[id];
+    var startRow = rows[0];
+    var goalRow = rows[rows.length-1];
+
+    var startAt = startRow.actualDepart || startRow.plannedDepart;
+    var nowT = (role === "arrive") ? row.actualArrive : row.actualDepart;
+    if(!nowT) nowT = new Date();
+
+    var elapsedMin = startAt ? (nowT - startAt)/60000 : null;
+
+    // 予定とのズレ（＋が遅れ）
+    var planned = (role === "arrive") ? row.plannedArrive : row.plannedDepart;
+    var delayMin = planned ? (nowT - planned)/60000 : null;
+
+    // 直前区間のペースのズレ（＋が遅い）
+    var paceDiff = null, actualPace = null, plannedPace = null;
+    if(role === "arrive" && row.walkActualMin && row.plan.dist > 0){
+      actualPace = row.walkActualMin / row.plan.dist;
+      plannedPace = 60 / row.plan.speed;
+      paceDiff = actualPace - plannedPace;
+    }
+
+    // 残り距離と残り地点
+    var restKm = 0, restPts = 0;
+    for(var i=1;i<rows.length;i++){
+      if(!rows[i].actualArrive){ restKm += rows[i].plan.dist || 0; restPts++; }
+    }
+
+    // ゴール予想
+    var goalEta = goalRow.actualArrive || goalRow.predictedArrive;
+    var goalDelay = (goalEta && PLAN[PLAN.length-1].arriveDate)
+      ? (goalEta - PLAN[PLAN.length-1].arriveDate)/60000 : null;
+
+    return {
+      sched: sched, row: row, elapsedMin: elapsedMin, delayMin: delayMin,
+      paceDiff: paceDiff, actualPace: actualPace, plannedPace: plannedPace,
+      restKm: restKm, restPts: restPts, goalEta: goalEta, goalDelay: goalDelay,
+      isStart: row.plan.type === "start",
+      isGoal:  row.plan.type === "goal",
+      timeStr: fmtTime(nowT)
+    };
+  }
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  // 到着時：ねぎらいと祝福
+  function arriveMessage(ctx, name){
+    var d = ctx.delayMin, pd = ctx.paceDiff;
+    var head, sub, tone, icon;
+
+    if(pd !== null && pd <= -1.0){
+      tone = "good"; icon = "🔥";
+      head = pick(["ナイスペース！", "速い！素晴らしい！", "絶好調です！"]);
+      sub = "予定より速いペースで歩けています。";
+    } else if(pd !== null && pd >= 1.5){
+      tone = "warn"; icon = "💪";
+      head = pick(["よく歩ききりました", "お疲れさま、ここまで来ました", "一歩ずつ、確実に"]);
+      sub = "ペースは少しゆっくりでも大丈夫。無理せず休憩をとりましょう。";
+    } else if(d !== null && d <= -5){
+      tone = "good"; icon = "⭐️";
+      head = pick(["予定より早い到着！", "先行しています！", "上出来です！"]);
+      sub = "貯金ができました。休憩をしっかり取りましょう。";
+    } else if(d !== null && d >= 20){
+      tone = "warn"; icon = "🌙";
+      head = pick(["到着おつかれさま", "ここまでよく頑張りました", "無理は禁物です"]);
+      sub = "予定より遅れていますが、目標は完歩です。ゆっくり休みましょう。";
+    } else {
+      tone = "ok"; icon = "👏";
+      head = pick(["到着おめでとう！", "ぴったり到着！", "順調です！"]);
+      sub = "計画どおりに進んでいます。この調子で。";
+    }
+
+    var lines = [];
+    if(ctx.elapsedMin != null) lines.push("経過 " + fmtDurationMin(ctx.elapsedMin));
+    if(d != null){
+      var dd = fmtDelta(d);
+      if(dd) lines.push("予定 " + dd.text);
+    }
+    if(ctx.actualPace) lines.push("平均 " + formatPaceMinSec(ctx.actualPace));
+    if(ctx.restPts > 0) lines.push("残り " + ctx.restKm.toFixed(1) + "km");
+
+    return { tone:tone, icon:icon, head:head, sub:sub + (lines.length ? "\n" + lines.join("　/　") : "") };
+  }
+
+  // 出発時：励まし
+  function departMessage(ctx, name, nextName){
+    var d = ctx.delayMin;
+    var head, sub, tone, icon;
+
+    if(d !== null && d <= -5){
+      tone = "good"; icon = "🚀";
+      head = pick(["いってらっしゃい！", "その調子！", "快調です！"]);
+      sub = "予定より早く出発。焦らず今のペースを保ちましょう。";
+    } else if(d !== null && d >= 20){
+      tone = "warn"; icon = "🌟";
+      head = pick(["ここからです！", "焦らず、一歩ずつ", "まだまだいけます"]);
+      sub = "遅れは気にせず、自分のペースで。完歩がいちばんの目標です。";
+    } else {
+      tone = "ok"; icon = "🚶";
+      head = pick(["いってらっしゃい！", "次の地点へ！", "がんばって！"]);
+      sub = "予定どおりのペースです。無理なく進みましょう。";
+    }
+
+    var lines = [];
+    if(nextName) lines.push("次は " + nextName);
+    if(ctx.goalEta) lines.push("ゴール予想 " + fmtTime(ctx.goalEta));
+    return { tone:tone, icon:icon, head:head, sub:sub + (lines.length ? "\n" + lines.join("　/　") : "") };
+  }
+
+  function showToast(m){
+    var el = document.getElementById("msgToast");
+    if(!el) return;
+    var subHtml = esc(m.sub).replace(/\n/g, "<br>");
+    el.innerHTML =
+      '<div class="msgCard '+m.tone+'">'
+      + '<div class="msgIcon">'+m.icon+'</div>'
+      + '<div class="msgBody"><div class="msgHead">'+esc(m.head)+'</div>'
+      + '<div class="msgSub">'+subHtml+'</div></div>'
+      + '<button type="button" class="msgClose" id="msgCloseBtn">×</button>'
+      + '</div>';
+    el.className = "msgToast show";
+    if(msgTimer) clearTimeout(msgTimer);
+    msgTimer = setTimeout(hideToast, 9000);
+    var cb = document.getElementById("msgCloseBtn");
+    if(cb) cb.addEventListener("click", hideToast);
+  }
+  function hideToast(){
+    var el = document.getElementById("msgToast");
+    if(el) el.className = "msgToast";
+    if(msgTimer){ clearTimeout(msgTimer); msgTimer = null; }
+  }
+
+  // ---------- スタート・ゴールの演出 ----------
+  function starField(n){
+    var h = '<div class="celStarBg">';
+    for(var i=0;i<n;i++){
+      var sz = (Math.random()*2.2+1).toFixed(1);
+      h += '<i style="left:'+(Math.random()*100).toFixed(1)+'%;top:'+(Math.random()*70).toFixed(1)+'%;'
+        + 'width:'+sz+'px;height:'+sz+'px;animation-delay:'+(Math.random()*2.4).toFixed(2)+'s"></i>';
+    }
+    return h + '</div>';
+  }
+  function confettiPieces(n){
+    var cols = ["#ffd166","#ef476f","#06d6a0","#4a90d9","#f78c6b","#c77dff","#ffffff"];
+    var h = "";
+    for(var i=0;i<n;i++){
+      h += '<div class="confetti" style="left:'+(Math.random()*100).toFixed(1)+'%;'
+        + 'background:'+cols[i%cols.length]+';'
+        + 'animation-duration:'+(2.4+Math.random()*2.2).toFixed(2)+'s;'
+        + 'animation-delay:'+(Math.random()*1.6).toFixed(2)+'s;'
+        + 'border-radius:'+(Math.random()<.4?"50%":"2px")+';"></div>';
+    }
+    return h;
+  }
+  function startArtSvg(){
+    return '<svg class="celArt" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">'
+      + '<circle cx="150" cy="48" r="26" fill="#faf0d2"/>'
+      + '<circle cx="136" cy="40" r="27" fill="#132a52"/>'
+      + '<circle class="glowRing" cx="100" cy="150" r="18" fill="none" stroke="#7ab8ff" stroke-width="2.5"/>'
+      + '<g class="walkAnim" fill="#ffffff">'
+      + '<circle cx="100" cy="88" r="13"/>'
+      + '<path d="M88 104 L112 104 L118 146 L82 146 Z"/>'
+      + '<rect x="76" y="106" width="9" height="30" rx="4.5" transform="rotate(18 80 106)"/>'
+      + '<rect x="115" y="106" width="9" height="30" rx="4.5" transform="rotate(-18 120 106)"/>'
+      + '<rect x="86" y="144" width="10" height="34" rx="5" transform="rotate(12 91 144)"/>'
+      + '<rect x="104" y="144" width="10" height="34" rx="5" transform="rotate(-12 109 144)"/>'
+      + '</g></svg>';
+  }
+  function goalArtSvg(){
+    return '<svg class="celArt" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">'
+      + '<defs><linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0%" stop-color="#ffe27a"/><stop offset="100%" stop-color="#e0a416"/>'
+      + '</linearGradient></defs>'
+      + '<circle cx="100" cy="96" r="62" fill="#ffb703" opacity=".14"/>'
+      + '<circle class="glowRing" cx="100" cy="96" r="18" fill="none" stroke="#ffd166" stroke-width="3"/>'
+      + '<path d="M66 48 h68 v26 a34 34 0 0 1-68 0 z" fill="url(#gGold)"/>'
+      + '<path d="M66 52 h-14 a16 16 0 0 0 16 22 z" fill="url(#gGold)"/>'
+      + '<path d="M134 52 h14 a16 16 0 0 1-16 22 z" fill="url(#gGold)"/>'
+      + '<rect x="92" y="104" width="16" height="26" fill="url(#gGold)"/>'
+      + '<rect x="74" y="130" width="52" height="13" rx="4" fill="url(#gGold)"/>'
+      + '<g class="walkAnim">'
+      + '<text x="100" y="176" font-size="30" text-anchor="middle">🎉</text>'
+      + '</g></svg>';
+  }
+
+  function showCelebration(kind, ctx){
+    var el = document.getElementById("celebrate");
+    if(!el) return;
+    var isGoal = (kind === "goal");
+    var title = isGoal ? "完歩おめでとう！" : "いってらっしゃい！";
+    var sub, stat = "";
+
+    if(isGoal){
+      sub = "58kmを歩ききりました。<br>本当におつかれさまでした。";
+      var lines = [];
+      if(ctx.elapsedMin != null) lines.push("所要時間　" + fmtDurationMin(ctx.elapsedMin));
+      lines.push("到着　" + ctx.timeStr);
+      if(ctx.delayMin != null){
+        var dd = fmtDelta(ctx.delayMin);
+        if(dd) lines.push("予定との差　" + dd.text);
+      }
+      var done = 0;
+      for(var i=1;i<ctx.sched.rows.length;i++){ done += ctx.sched.rows[i].plan.dist || 0; }
+      lines.push("歩行距離　" + done.toFixed(1) + "km");
+      stat = '<div class="celStat">' + lines.join("<br>") + '</div>';
+    } else {
+      sub = "長い夜のはじまりです。<br>気をつけて、いってらっしゃい。";
+      var l2 = ["出発　" + ctx.timeStr];
+      var totalKm = 0;
+      for(var j=1;j<PLAN.length;j++) totalKm += PLAN[j].dist || 0;
+      l2.push("全行程　" + totalKm.toFixed(1) + "km");
+      l2.push("ゴール予定　" + fmtTime(PLAN[PLAN.length-1].arriveDate));
+      stat = '<div class="celStat">' + l2.join("<br>") + '</div>';
+    }
+
+    el.innerHTML = starField(40)
+      + (isGoal ? confettiPieces(70) : "")
+      + '<div class="celInner">'
+      + (isGoal ? goalArtSvg() : startArtSvg())
+      + '<div class="celTitle">' + title + '</div>'
+      + '<div class="celSub">' + sub + '</div>'
+      + stat
+      + '<button type="button" class="celBtn" id="celCloseBtn">' + (isGoal ? "記録を見る" : "はじめる") + '</button>'
+      + '</div>';
+    el.className = "celebrate show";
+
+    document.getElementById("celCloseBtn").addEventListener("click", function(){
+      el.className = "celebrate";
+      if(isGoal) switchTab("summary");
+    });
+
+    playFanfare(isGoal);
+    if(navigator.vibrate){
+      try{ navigator.vibrate(isGoal ? [90,60,90,60,220] : [70,50,70]); }catch(e){}
+    }
+  }
+
+  // ファンファーレ（Web Audio で生成）
+  function playFanfare(isGoal){
+    primeAudio();
+    if(!audioCtx) return;
+    try{ if(audioCtx.state === "suspended") audioCtx.resume(); }catch(e){}
+    var t = audioCtx.currentTime + 0.06;
+    // ゴールは長め・華やかに、スタートは短く軽やかに
+    var notes = isGoal
+      ? [523,659,784,1047,784,1047,1319]
+      : [523,659,784,1047];
+    var dur = isGoal ? 0.20 : 0.16;
+    for(var i=0;i<notes.length;i++){
+      beep(notes[i], t + i*dur, dur*1.5, 0.22);
+    }
+    if(isGoal){
+      beep(1568, t + notes.length*dur + 0.05, 0.75, 0.26);
+      beep(1047, t + notes.length*dur + 0.05, 0.75, 0.18);
+    }
+  }
+
+  // 到着・出発の記録時に呼ぶ入口
+  function showMilestone(role, id, name){
+    var ctx = milestoneContext(role, id);
+    if(ctx.isStart && role === "depart"){
+      showCelebration("start", ctx);
+      return;
+    }
+    if(ctx.isGoal && role === "arrive"){
+      showCelebration("goal", ctx);
+      return;
+    }
+    var m = (role === "arrive")
+      ? arriveMessage(ctx, name)
+      : departMessage(ctx, name, (PLAN[id+1] ? PLAN[id+1].name : null));
+    showToast(m);
+  }
+
+  // ==========================================================
+  //  行程設定
+  // ==========================================================
+  var reDraft = null;      // 編集中の行程データ（保存するまで本体には反映しない）
+  var rePlanTab = 0;       // 表示中の計画
+
+  function pad2s(n){ return (n<10?"0":"")+n; }
+
+  // 「M分SS秒/km」表記 ⇔ 分（数値）の相互変換
+  function paceToStr(minPerKm){
+    if(!isFinite(minPerKm) || minPerKm<=0) return "";
+    var sec = Math.round(minPerKm*60);
+    return Math.floor(sec/60) + ":" + pad2s(sec%60);
+  }
+  function strToPace(str){
+    var m = String(str||"").match(/^(\d+)[:：'分]?\s*(\d{1,2})?/);
+    if(!m) return null;
+    var mi = parseInt(m[1],10);
+    var se = m[2] ? parseInt(m[2],10) : 0;
+    if(isNaN(mi)) return null;
+    return mi + se/60;
+  }
+  function addMinToTime(hhmm, addMin){
+    var pp = String(hhmm||"").split(":");
+    var h = parseInt(pp[0],10), m = parseInt(pp[1],10);
+    if(isNaN(h)||isNaN(m)) return hhmm;
+    var t = h*60 + m + Math.round(addMin);
+    t = ((t % 1440) + 1440) % 1440;
+    return pad2s(Math.floor(t/60)) + ":" + pad2s(t%60);
+  }
+  function diffMinTime(fromHHMM, toHHMM){
+    var a = String(fromHHMM||"").split(":"), b = String(toHHMM||"").split(":");
+    var t1 = parseInt(a[0],10)*60 + parseInt(a[1],10);
+    var t2 = parseInt(b[0],10)*60 + parseInt(b[1],10);
+    if(isNaN(t1)||isNaN(t2)) return null;
+    var d = t2 - t1;
+    if(d <= 0) d += 1440;   // 日付をまたぐ
+    return d;
+  }
+  // 各区間の「出発時刻」を先頭から順に求める
+  function legDepartTimes(plan){
+    var out = [], cur = plan.start;
+    for(var i=0;i<plan.legs.length;i++){
+      out.push(cur);
+      cur = addMinToTime(plan.legs[i].arrive, Number(plan.legs[i].rest)||0);
+    }
+    return out;
+  }
+
+  function openRouteEditor(){
+    reDraft = JSON.parse(JSON.stringify(route));
+    rePlanTab = 0;
+    renderRouteEditor();
+    document.getElementById("routeEditor").style.display = "flex";
+  }
+  function closeRouteEditor(){
+    document.getElementById("routeEditor").style.display = "none";
+    reDraft = null;
+  }
+
+  function renderRouteEditor(){
+    var d = reDraft, h = "";
+
+    h += '<div class="reWarn">区間数を変えると、入力済みの実際の時刻が合わなくなることがあります。'
+       + '本番前に設定を済ませてください。</div>';
+
+    // 基本情報
+    h += '<div class="reCard"><h3>基本情報</h3>'
+      + '<div class="reRow"><label>タイトル</label>'
+      + '<input class="reInput" id="reTitle" type="text" value="'+esc(d.title)+'"></div>'
+      + '<div class="reRow"><label>日付</label>'
+      + '<input class="reInput" id="reDate" type="date" value="'+esc(d.date)+'"></div>'
+      + '<div class="reRow"><label>計画1の名前</label>'
+      + '<input class="reInput" id="rePlan0" type="text" value="'+esc(d.plans[0].name)+'"></div>'
+      + '<div class="reRow"><label>計画2の名前</label>'
+      + '<input class="reInput" id="rePlan1" type="text" value="'+esc(d.plans[1].name)+'"></div>'
+      + '</div>';
+
+    // 地点
+    h += '<div class="reCard"><h3>地点（'+d.points.length+'か所／区間'+(d.points.length-1)+'）</h3>';
+    for(var i=0;i<d.points.length;i++){
+      var pt = d.points[i];
+      var badge = i===0 ? "S" : (i===d.points.length-1 ? "G" : String(i));
+      h += '<div class="rePt">'
+        + '<div class="reRow"><span class="rePtNo">'+badge+'</span>'
+        + '<input class="reInput" data-pt="'+i+'" data-f="name" type="text" value="'+esc(pt.name)+'">'
+        + (d.points.length>2 ? '<button type="button" class="reDel" data-delpt="'+i+'">×</button>' : '')
+        + '</div>'
+        + '<div class="reGrid">'
+        + '<div class="reFld"><span>緯度</span><input class="reInput" data-pt="'+i+'" data-f="lat" type="text" inputmode="decimal" value="'+pt.lat+'"></div>'
+        + '<div class="reFld"><span>経度</span><input class="reInput" data-pt="'+i+'" data-f="lng" type="text" inputmode="decimal" value="'+pt.lng+'"></div>'
+        + '</div></div>';
+    }
+    h += '<button type="button" class="reAdd" id="reAddPt">＋ 地点を追加（末尾）</button>'
+      + '<div class="reNote">緯度・経度はGoogleマップで地点を長押しすると調べられます。'
+      + '距離の自動計算に使います。</div></div>';
+
+    // 区間（計画ごと）
+    h += '<div class="reCard"><h3>区間の時刻とペース</h3>'
+      + '<div class="reTabs">'
+      + '<button type="button" data-ptab="0" class="'+(rePlanTab===0?"active":"")+'">'+esc(d.plans[0].name)+'</button>'
+      + '<button type="button" data-ptab="1" class="'+(rePlanTab===1?"active":"")+'">'+esc(d.plans[1].name)+'</button>'
+      + '</div>';
+
+    var plan = d.plans[rePlanTab];
+    h += '<div class="reRow"><label>出発時刻</label>'
+      + '<input class="reInput sm" id="reStart" type="time" value="'+esc(plan.start)+'"></div>';
+
+    var deps = legDepartTimes(plan);
+    for(var j=0;j<plan.legs.length;j++){
+      var leg = plan.legs[j];
+      var dist = Number(d.dist[j])||0;
+      var walk = diffMinTime(deps[j], leg.arrive);
+      var pace = (walk && dist>0) ? walk/dist : null;
+      var isLast = (j === plan.legs.length-1);
+      var fromN = d.points[j] ? d.points[j].name : "";
+      var toN   = d.points[j+1] ? d.points[j+1].name : "";
+      h += '<div class="reLeg">'
+        + '<div class="reLegHead"><span>区間'+(j+1)+'</span>'
+        + '<span class="t">'+esc(fromN)+' → '+esc(toN)+'</span></div>'
+        + '<div class="reRow"><label>距離 km</label>'
+        + '<input class="reInput sm" data-leg="'+j+'" data-f="dist" type="text" inputmode="decimal" value="'+dist+'">'
+        + '<button type="button" class="reAutoBtn" data-autodist="'+j+'">自動計算</button></div>'
+        + '<div class="reGrid">'
+        + '<div class="reFld"><span>出発（自動）</span>'
+        + '<input class="reInput" type="time" value="'+esc(deps[j])+'" disabled></div>'
+        + '<div class="reFld"><span>到着</span>'
+        + '<input class="reInput" data-leg="'+j+'" data-f="arrive" type="time" value="'+esc(leg.arrive)+'"></div>'
+        + '<div class="reFld"><span>ペース 分:秒/km</span>'
+        + '<input class="reInput" data-leg="'+j+'" data-f="pace" type="text" inputmode="numeric" value="'+paceToStr(pace)+'"></div>'
+        + '<div class="reFld"><span>'+(isLast?"（休憩なし）":"休憩 分")+'</span>'
+        + (isLast ? '<input class="reInput" type="text" value="—" disabled>'
+                  : '<input class="reInput" data-leg="'+j+'" data-f="rest" type="text" inputmode="numeric" value="'+(Number(leg.rest)||0)+'">')
+        + '</div></div>'
+        + '<div class="reNote">歩行 '+(walk!=null?fmtDurationMin(walk):"—")+'</div>'
+        + '</div>';
+    }
+
+    var totKm = 0, totWalk = 0, totRest = 0;
+    for(var k=0;k<plan.legs.length;k++){
+      totKm += Number(d.dist[k])||0;
+      var w = diffMinTime(deps[k], plan.legs[k].arrive);
+      if(w) totWalk += w;
+      totRest += (k===plan.legs.length-1) ? 0 : (Number(plan.legs[k].rest)||0);
+    }
+    h += '<div class="reNote"><b>合計</b>　距離 '+totKm.toFixed(1)+'km ／ 歩行 '+fmtDurationMin(totWalk)
+      + ' ／ 休憩 '+fmtDurationMin(totRest)
+      + ' ／ 到着 '+esc(plan.legs.length?plan.legs[plan.legs.length-1].arrive:"—")+'</div>';
+    h += '</div>';
+
+    h += '<button type="button" class="reAdd" id="reResetBtn" style="border-color:#f0c4c4;color:#c62828;background:#fdf6f6;">初期値（今回の行程）に戻す</button>';
+
+    document.getElementById("reBody").innerHTML = h;
+    bindRouteEditor();
+  }
+
+  function esc(v){
+    return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function bindRouteEditor(){
+    var body = document.getElementById("reBody");
+
+    // 基本情報
+    var t = document.getElementById("reTitle");
+    if(t) t.addEventListener("change", function(){ reDraft.title = this.value; });
+    var dt = document.getElementById("reDate");
+    if(dt) dt.addEventListener("change", function(){ reDraft.date = this.value; });
+    [0,1].forEach(function(i){
+      var el = document.getElementById("rePlan"+i);
+      if(el) el.addEventListener("change", function(){
+        reDraft.plans[i].name = this.value; renderRouteEditor();
+      });
+    });
+
+    // 計画タブ
+    Array.prototype.forEach.call(body.querySelectorAll("[data-ptab]"), function(b){
+      b.addEventListener("click", function(){
+        rePlanTab = parseInt(this.getAttribute("data-ptab"),10);
+        renderRouteEditor();
+      });
+    });
+
+    // 地点
+    Array.prototype.forEach.call(body.querySelectorAll("[data-pt]"), function(inp){
+      inp.addEventListener("change", function(){
+        var i = parseInt(this.getAttribute("data-pt"),10);
+        var f = this.getAttribute("data-f");
+        reDraft.points[i][f] = (f==="name") ? this.value : (parseFloat(this.value)||0);
+        renderRouteEditor();
+      });
+    });
+    Array.prototype.forEach.call(body.querySelectorAll("[data-delpt]"), function(b){
+      b.addEventListener("click", function(){
+        var i = parseInt(this.getAttribute("data-delpt"),10);
+        reDraft.points.splice(i,1);
+        // 地点を消したら、その手前の区間も消す
+        var li = (i===0) ? 0 : i-1;
+        reDraft.dist.splice(li,1);
+        reDraft.plans.forEach(function(pl){ pl.legs.splice(li,1); });
+        renderRouteEditor();
+      });
+    });
+    var addBtn = document.getElementById("reAddPt");
+    if(addBtn) addBtn.addEventListener("click", function(){
+      var last = reDraft.points[reDraft.points.length-1];
+      reDraft.points.push({name:"新しい地点", lat:last?last.lat:34.5, lng:last?last.lng:136.5});
+      reDraft.dist.push(3.0);
+      reDraft.plans.forEach(function(pl){
+        var prev = pl.legs.length ? pl.legs[pl.legs.length-1] : null;
+        var base = prev ? addMinToTime(prev.arrive, Number(prev.rest)||0) : pl.start;
+        pl.legs.push({arrive: addMinToTime(base, 45), rest: 0});
+        // 直前の区間は終点でなくなるので休憩を持たせる
+        if(pl.legs.length>=2 && !Number(pl.legs[pl.legs.length-2].rest)){
+          pl.legs[pl.legs.length-2].rest = 20;
+        }
+      });
+      renderRouteEditor();
+    });
+
+    // 出発時刻
+    var st = document.getElementById("reStart");
+    if(st) st.addEventListener("change", function(){
+      reDraft.plans[rePlanTab].start = this.value; renderRouteEditor();
+    });
+
+    // 区間
+    Array.prototype.forEach.call(body.querySelectorAll("[data-leg]"), function(inp){
+      inp.addEventListener("change", function(){
+        var j = parseInt(this.getAttribute("data-leg"),10);
+        var f = this.getAttribute("data-f");
+        var plan = reDraft.plans[rePlanTab];
+        var deps = legDepartTimes(plan);
+
+        if(f === "dist"){
+          reDraft.dist[j] = parseFloat(this.value)||0;
+        } else if(f === "arrive"){
+          plan.legs[j].arrive = this.value;             // 到着を入れる → ペースは自動
+        } else if(f === "rest"){
+          plan.legs[j].rest = parseInt(this.value,10)||0;
+        } else if(f === "pace"){
+          // ペースを入れる → 到着時刻を計算
+          var pace = strToPace(this.value);
+          var dist = Number(reDraft.dist[j])||0;
+          if(pace && dist>0){
+            plan.legs[j].arrive = addMinToTime(deps[j], pace*dist);
+          }
+        }
+        renderRouteEditor();
+      });
+    });
+
+    // 距離の自動計算
+    Array.prototype.forEach.call(body.querySelectorAll("[data-autodist]"), function(b){
+      b.addEventListener("click", function(){
+        var j = parseInt(this.getAttribute("data-autodist"),10);
+        var a = reDraft.points[j], c = reDraft.points[j+1];
+        if(a && c){
+          var km = coordDistKm({lat:Number(a.lat),lng:Number(a.lng)},
+                               {lat:Number(c.lat),lng:Number(c.lng)}) * ROAD_FACTOR;
+          reDraft.dist[j] = Math.round(km*10)/10;
+          renderRouteEditor();
+        }
+      });
+    });
+
+    var rb = document.getElementById("reResetBtn");
+    if(rb) rb.addEventListener("click", function(){
+      reDraft = JSON.parse(JSON.stringify(DEFAULT_ROUTE));
+      renderRouteEditor();
+    });
+  }
+
+  // 保存して、行程データを全体に反映する
+  function applyRoute(newRoute){
+    route = newRoute;
+    saveRoute(route);
+    PLAN_NORMAL = buildPlan(route, 0);
+    PLAN_FAST   = buildPlan(route, 1);
+    PLAN = (currentPlanKey === "fast") ? PLAN_FAST : PLAN_NORMAL;
+    rebuildCoords();
+    if(fullRouteMapInstance){          // 地図は作り直す
+      try{ fullRouteMapInstance.remove(); }catch(e){}
+      fullRouteMapInstance = null;
+    }
+    if(currentLegIndex > PLAN.length-1) currentLegIndex = 1;
+    applyRouteTitle();
+    updatePlanSwitcherUI();
+    refreshAll();
+  }
+  function applyRouteTitle(){
+    var t = document.getElementById("appTitle");
+    var sub = document.getElementById("appSub");
+    if(t) t.textContent = route.title || "Night Walker";
+    if(sub && route.points && route.points.length>1){
+      var a = route.points[0].name.replace(/^S:/,"");
+      var b = route.points[route.points.length-1].name.replace(/^G:/,"");
+      sub.textContent = a + " → " + b;
+    }
+  }
+
+  document.getElementById("routeEditBtn").addEventListener("click", openRouteEditor);
+  document.getElementById("reCancelBtn").addEventListener("click", closeRouteEditor);
+  document.getElementById("reSaveBtn").addEventListener("click", function(){
+    if(!reDraft) return;
+    if(reDraft.points.length < 2){ alertBar("地点は2か所以上必要です。"); return; }
+    applyRoute(JSON.parse(JSON.stringify(reDraft)));
+    closeRouteEditor();
+  });
 
   // ---------- サービスワーカー（オフライン動作用） ----------
   if("serviceWorker" in navigator){

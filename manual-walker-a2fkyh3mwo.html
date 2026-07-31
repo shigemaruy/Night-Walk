@@ -118,8 +118,9 @@
   <a href="#s3">3 使い方</a>
   <a href="#s4">4 ペース</a>
   <a href="#s5">5 その他</a>
-  <a href="#s6">6 困ったら</a>
-  <a href="#s7">7 確認</a>
+  <a href="#s8">6 行程設定</a>
+  <a href="#s6">7 困ったら</a>
+  <a href="#s7">8 確認</a>
 </nav>
 
 <main>
@@ -337,6 +338,18 @@
     </details>
 
     <details>
+      <summary>🎉 到着・出発時のメッセージ</summary>
+      <div class="dbody">
+        ボタンを押すと、そのときの状況に合わせたメッセージが画面に出ます。<br><br>
+        <b>到着時</b>：ねぎらいと祝福。経過時間・予定との差・平均ペース・残り距離が表示されます<br>
+        <b>出発時</b>：励まし。次の地点とゴール予想が表示されます<br><br>
+        <b>スタートとゴールは特別な演出</b>が出ます。音が鳴り、画面いっぱいにお祝いが表示されます。<br>
+        ゴールの演出は、閉じるとそのまま記録画面に移ります。<br><br>
+        メッセージは数秒で自動的に消えます。右上の「×」ですぐ消すこともできます。
+      </div>
+    </details>
+
+    <details>
       <summary>ペースの計画を切り替える</summary>
       <div class="dbody">
         上部の <span class="btn">通常ペース</span> / <span class="btn">1割速めペース</span> で計画を切り替えられます。<br><br>
@@ -346,8 +359,44 @@
   </div>
 </section>
 
+<section id="s8">
+  <h2><span class="n">6</span>行程設定（主催者向け）</h2>
+  <div class="body">
+    <p>計画切替の下にある <span class="btn">🛠 行程設定</span> から、コースや時刻を変更できます。<b>参加者は触る必要はありません。</b></p>
+
+    <div class="note warn">
+      <span class="t">本番前に済ませてください</span>
+      区間数を変えると、入力済みの実際の時刻が合わなくなることがあります。
+    </div>
+
+    <h3>設定できること</h3>
+    <table>
+      <tr><th>項目</th><th>内容</th></tr>
+      <tr><td>基本情報</td><td>タイトル、日付、2つの計画の名前</td></tr>
+      <tr><td>地点</td><td>名前・緯度・経度。<b>追加と削除ができます</b></td></tr>
+      <tr><td>距離</td><td>手入力のほか、<span class="btn">自動計算</span> で緯度経度から概算できます</td></tr>
+      <tr><td>時刻</td><td>出発時刻、各地点の到着時刻、休憩時間</td></tr>
+      <tr><td>ペース</td><td>分:秒/km で入力できます</td></tr>
+    </table>
+
+    <h3>時刻とペースの関係</h3>
+    <ul>
+      <li><b>到着時刻を入れると</b> → ペースが自動で計算されます</li>
+      <li><b>ペースを入れると</b> → 到着時刻が自動で計算されます</li>
+      <li>各区間の出発時刻は「前の地点の到着＋休憩」で自動的に決まります</li>
+    </ul>
+
+    <div class="note info">
+      <span class="t">保護者側にも自動で反映されます</span>
+      行程を変えると、その内容が保護者のNW watcherにも自動で送られます。保護者側での設定は不要です。
+    </div>
+
+    <p>設定を戻したいときは、一番下の <span class="btn">初期値（今回の行程）に戻す</span> を押してください。</p>
+  </div>
+</section>
+
 <section id="s6">
-  <h2><span class="n">6</span>困ったときは</h2>
+  <h2><span class="n">7</span>困ったときは</h2>
   <div class="body">
     <div class="note alert">
       <span class="t">いちばん大事なこと</span>
@@ -375,7 +424,7 @@
 </section>
 
 <section id="s7">
-  <h2><span class="n">7</span>当日までの確認</h2>
+  <h2><span class="n">8</span>当日までの確認</h2>
   <div class="body">
     <ul class="check">
       <li>ホーム画面に追加した</li>

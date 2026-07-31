@@ -44,7 +44,8 @@ function doPost(e) {
       (data.lat === undefined || data.lat === null) ? '' : data.lat,
       (data.lng === undefined || data.lng === null) ? '' : data.lng,
       JSON.stringify(data.actuals || {}),
-      JSON.stringify(data.weather || {})
+      JSON.stringify(data.weather || {}),
+      JSON.stringify(data.route || null)
     ]);
     trimOldRows(sh);
     return jsonOut({ ok: true });
@@ -74,9 +75,10 @@ function doGet(e) {
     if (!row) {
       return jsonOut({ ok: true, empty: true });
     }
-    var actuals = {}, weather = {};
+    var actuals = {}, weather = {}, routeCfg = null;
     try { actuals = row[8] ? JSON.parse(row[8]) : {}; } catch (e2) { actuals = {}; }
     try { weather = row[9] ? JSON.parse(row[9]) : {}; } catch (e3) { weather = {}; }
+    try { routeCfg = row[10] ? JSON.parse(row[10]) : null; } catch (e4) { routeCfg = null; }
 
     return jsonOut({
       ok: true,
@@ -90,7 +92,8 @@ function doGet(e) {
       lat: row[6] === '' ? null : Number(row[6]),
       lng: row[7] === '' ? null : Number(row[7]),
       actuals: actuals,
-      weather: weather
+      weather: weather,
+      route: routeCfg
     });
   } catch (err) {
     return jsonOut({ ok: false, error: String(err) });
@@ -101,7 +104,7 @@ function doGet(e) {
 function findLatestRowForPair(sh, pair) {
   var last = sh.getLastRow();
   if (last < 2) return null;
-  var values = sh.getRange(2, 1, last - 1, 10).getValues();
+  var values = sh.getRange(2, 1, last - 1, 11).getValues();
   for (var i = values.length - 1; i >= 0; i--) {
     if (String(values[i][1]).trim() === pair) return values[i];
   }
@@ -112,7 +115,7 @@ function findLatestRowForPair(sh, pair) {
 function deleteRowsForPair(sh, pair) {
   var last = sh.getLastRow();
   if (last < 2) return 0;
-  var values = sh.getRange(2, 1, last - 1, 10).getValues();
+  var values = sh.getRange(2, 1, last - 1, 11).getValues();
   var count = 0;
   // 下から削除しないと行番号がずれる
   for (var i = values.length - 1; i >= 0; i--) {
@@ -130,7 +133,7 @@ function getSheet() {
   if (!sh) {
     sh = ss.insertSheet(SHEET_NAME);
     sh.appendRow(['updatedAt', 'pair', 'name', 'planKey', 'event',
-                  'legId', 'lat', 'lng', 'actuals', 'weather']);
+                  'legId', 'lat', 'lng', 'actuals', 'weather', 'route']);
   }
   return sh;
 }

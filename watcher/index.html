@@ -132,8 +132,8 @@
 <body>
 
 <header>
-  <h1>NW watcher</h1>
-  <div class="sub">ナイトウォーク見守り</div>
+  <h1 id="appTitle">NW watcher</h1>
+  <div class="sub" id="appSub">ナイトウォーク見守り</div>
 </header>
 
 <main>
@@ -227,62 +227,128 @@
   "use strict";
 
   // ---------- 計画データ(Night Walk と同一) ----------
-  var PLAN_NORMAL = [
-    {id:0, name:"出発：関ドライブイン",        dist:null, speed:null, walkMin:0,  restMin:0,  arrive:null,                depart:"2026-08-01T17:30", type:"start"},
-    {id:1, name:"①ファミマ 大里睦合町店",       dist:11.0, speed:5.0, walkMin:132,restMin:7,  arrive:"2026-08-01T19:42", depart:"2026-08-01T19:49", type:"stop"},
-    {id:2, name:"②セブン 津中央店",             dist:7.7,  speed:4.8, walkMin:96, restMin:12, arrive:"2026-08-01T21:25", depart:"2026-08-01T21:37", type:"stop"},
-    {id:3, name:"③セブン 津雲出本郷店",         dist:6.5,  speed:4.6, walkMin:85, restMin:12, arrive:"2026-08-01T23:02", depart:"2026-08-01T23:14", type:"stop"},
-    {id:4, name:"④ファミマ みくも中道店",       dist:5.0,  speed:4.4, walkMin:68, restMin:16, arrive:"2026-08-02T00:22", depart:"2026-08-02T00:38", type:"stop"},
-    {id:5, name:"⑤ローソン 松阪鎌田店",         dist:5.0,  speed:4.2, walkMin:71, restMin:20, arrive:"2026-08-02T01:49", depart:"2026-08-02T02:09", type:"stop"},
-    {id:6, name:"⑥セブン 松阪豊原町西店",       dist:5.7,  speed:4.0, walkMin:86, restMin:20, arrive:"2026-08-02T03:35", depart:"2026-08-02T03:55", type:"stop"},
-    {id:7, name:"⑦セブン 玉城世古店",           dist:6.3,  speed:3.8, walkMin:99, restMin:12, arrive:"2026-08-02T05:34", depart:"2026-08-02T05:46", type:"stop"},
-    {id:8, name:"⑧セブン 伊勢小俣宮前店",       dist:4.5,  speed:4.0, walkMin:68, restMin:7,  arrive:"2026-08-02T06:54", depart:"2026-08-02T07:01", type:"stop"},
-    {id:9, name:"ゴール：猿田彦神社",           dist:6.4,  speed:4.3, walkMin:89, restMin:0,  arrive:"2026-08-02T08:30", depart:null,               type:"goal"}
-  ];
-  var PLAN_FAST = [
-    {id:0, name:"出発：関ドライブイン",        dist:null, speed:null,  walkMin:0,  restMin:0,  arrive:null,                depart:"2026-08-01T17:30", type:"start"},
-    {id:1, name:"①ファミマ 大里睦合町店",       dist:11.0, speed:5.56, walkMin:119,restMin:12, arrive:"2026-08-01T19:29", depart:"2026-08-01T19:41", type:"stop"},
-    {id:2, name:"②セブン 津中央店",             dist:7.7,  speed:5.33, walkMin:87, restMin:21, arrive:"2026-08-01T21:08", depart:"2026-08-01T21:29", type:"stop"},
-    {id:3, name:"③セブン 津雲出本郷店",         dist:6.5,  speed:5.11, walkMin:76, restMin:21, arrive:"2026-08-01T22:45", depart:"2026-08-01T23:06", type:"stop"},
-    {id:4, name:"④ファミマ みくも中道店",       dist:5.0,  speed:4.89, walkMin:61, restMin:25, arrive:"2026-08-02T00:07", depart:"2026-08-02T00:32", type:"stop"},
-    {id:5, name:"⑤ローソン 松阪鎌田店",         dist:5.0,  speed:4.67, walkMin:64, restMin:25, arrive:"2026-08-02T01:36", depart:"2026-08-02T02:01", type:"stop"},
-    {id:6, name:"⑥セブン 松阪豊原町西店",       dist:5.7,  speed:4.44, walkMin:77, restMin:25, arrive:"2026-08-02T03:18", depart:"2026-08-02T03:43", type:"stop"},
-    {id:7, name:"⑦セブン 玉城世古店",           dist:6.3,  speed:4.22, walkMin:90, restMin:21, arrive:"2026-08-02T05:13", depart:"2026-08-02T05:34", type:"stop"},
-    {id:8, name:"⑧セブン 伊勢小俣宮前店",       dist:4.5,  speed:4.44, walkMin:61, restMin:25, arrive:"2026-08-02T06:35", depart:"2026-08-02T07:00", type:"stop"},
-    {id:9, name:"ゴール：猿田彦神社",           dist:6.4,  speed:4.29, walkMin:90, restMin:0,  arrive:"2026-08-02T08:30", depart:null,               type:"goal"}
-  ];
-  function prep(arr){
-    arr.forEach(function(p){
-      p.arriveDate = p.arrive ? new Date(p.arrive) : null;
-      p.departDate = p.depart ? new Date(p.depart) : null;
-    });
-    return arr;
-  }
-  prep(PLAN_NORMAL); prep(PLAN_FAST);
-
-  var COORDS = {
-    0: {lat:34.840872, lng:136.403097, label:"名阪関ドライブイン"},
-    1: {lat:34.778103, lng:136.477556, label:"ファミマ大里睦合町店"},
-    2: {lat:34.720381, lng:136.510217, label:"セブン津中央店"},
-    3: {lat:34.665712, lng:136.519794, label:"セブン津雲出本郷店"},
-    4: {lat:34.621893, lng:136.515962, label:"ファミマみくも中道店"},
-    5: {lat:34.582477, lng:136.535031, label:"ローソン松阪鎌田店"},
-    6: {lat:34.548534, lng:136.579118, label:"セブン松阪豊原町西店"},
-    7: {lat:34.516169, lng:136.634775, label:"セブン玉城世古店"},
-    8: {lat:34.492687, lng:136.674677, label:"セブン伊勢小俣宮前店"},
-    9: {lat:34.467004, lng:136.720526, label:"猿田彦神社"}
+  // ==========================================================
+  //  行程データ（子アプリから送られてきたものを使う）
+  // ==========================================================
+  // 子が「行程設定」で変更すると、その内容が一緒に送られてくるため、
+  // 親側は何も設定しなくても自動的に同じ行程になる。
+  // まだ受信していない間は、この初期値を使う。
+  var DEFAULT_ROUTE = {
+    title: "2026 Night Walk in 伊勢",
+    date: "2026-08-01",
+    points: [
+      {name:"S:関ドライブイン",              lat:34.840872,  lng:136.403097},
+      {name:"①ファミマ大里睦合町",            lat:34.7781029, lng:136.4775564},
+      {name:"②偕楽公園",                     lat:34.7328178, lng:136.5071246},
+      {name:"③ファミマ高茶屋小森店",          lat:34.670612,  lng:136.5164222},
+      {name:"④ファミマみくも中道店",          lat:34.621893,  lng:136.515962},
+      {name:"⑤ローソン松阪鎌田町店",          lat:34.5824774, lng:136.5350306},
+      {name:"⑥JAみえなか本店",               lat:34.5475938, lng:136.580018},
+      {name:"⑦しまむら玉城店",               lat:34.5164187, lng:136.6341734},
+      {name:"⑧セカンドストリート伊勢小俣店",   lat:34.4933832, lng:136.6728243},
+      {name:"G:猿田彦神社",                  lat:34.467004,  lng:136.720526}
+    ],
+    dist: [11.0, 6.2, 7.5, 5.3, 5.0, 5.7, 6.1, 5.3, 6.3],
+    plans: [
+      { name:"9時着ペース",  start:"18:00",
+        legs:[ {arrive:"20:10",rest:20},{arrive:"21:50",rest:20},{arrive:"23:40",rest:20},
+               {arrive:"01:00",rest:20},{arrive:"02:20",rest:20},{arrive:"04:00",rest:20},
+               {arrive:"05:40",rest:20},{arrive:"07:10",rest:20},{arrive:"09:00",rest:0} ] },
+      { name:"8時半着ペース", start:"18:00",
+        legs:[ {arrive:"20:10",rest:20},{arrive:"21:50",rest:20},{arrive:"23:40",rest:20},
+               {arrive:"01:00",rest:20},{arrive:"02:20",rest:20},{arrive:"04:00",rest:20},
+               {arrive:"05:40",rest:20},{arrive:"07:10",rest:20},{arrive:"08:30",rest:0} ] }
+    ]
   };
-  // iPhone専用の機能は、他の端末では代わりのものを開く
-  function isIOS(){
-    var ua = navigator.userAgent || "";
-    return /iPad|iPhone|iPod/.test(ua)
-      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  var route = JSON.parse(JSON.stringify(DEFAULT_ROUTE));
+
+  function timeAfter(baseDate, hhmm){
+    var pp = String(hhmm||"").split(":");
+    var hh = parseInt(pp[0],10), mm = parseInt(pp[1],10);
+    if(isNaN(hh)||isNaN(mm)) return null;
+    var d = new Date(baseDate.getTime());
+    d.setHours(hh, mm, 0, 0);
+    if(d.getTime() <= baseDate.getTime()) d.setDate(d.getDate()+1);
+    return d;
+  }
+
+  function buildPlan(cfg, planIdx){
+    var plan = cfg.plans[planIdx];
+    var out = [];
+    var base = new Date(cfg.date + "T00:00:00");
+    var sp = String(plan.start||"18:00").split(":");
+    var startD = new Date(base.getTime());
+    startD.setHours(parseInt(sp[0],10)||0, parseInt(sp[1],10)||0, 0, 0);
+
+    out.push({ id:0, name:cfg.points[0] ? cfg.points[0].name : "出発",
+               dist:null, speed:null, walkMin:0, restMin:0,
+               arriveDate:null, departDate:startD, type:"start" });
+
+    var prevDepart = startD;
+    var n = plan.legs.length;
+    for(var i=0;i<n;i++){
+      var leg = plan.legs[i];
+      var arriveD = timeAfter(prevDepart, leg.arrive);
+      if(!arriveD) arriveD = new Date(prevDepart.getTime()+60*60000);
+      var walkMin = (arriveD - prevDepart)/60000;
+      var dist = Number(cfg.dist[i]) || 0;
+      var isGoal = (i === n-1);
+      var rest = isGoal ? 0 : (Number(leg.rest)||0);
+      var departD = isGoal ? null : new Date(arriveD.getTime()+rest*60000);
+      out.push({
+        id: i+1,
+        name: cfg.points[i+1] ? cfg.points[i+1].name : ("地点"+(i+1)),
+        dist: dist,
+        speed: (walkMin>0 && dist>0) ? dist/(walkMin/60) : null,
+        walkMin: walkMin, restMin: rest,
+        arriveDate: arriveD, departDate: departD,
+        type: isGoal ? "goal" : "stop"
+      });
+      prevDepart = departD;
+    }
+    return out;
+  }
+
+  var PLAN_NORMAL = buildPlan(route, 0);
+  var PLAN_FAST   = buildPlan(route, 1);
+
+  var COORDS = {};
+  function rebuildCoords(){
+    COORDS = {};
+    for(var i=0;i<route.points.length;i++){
+      var pt = route.points[i];
+      COORDS[i] = { lat:Number(pt.lat), lng:Number(pt.lng),
+                    label: pt.name.replace(/^[SG]:/,"").replace(/^[①②③④⑤⑥⑦⑧⑨⑩]/,"") };
+    }
+  }
+  rebuildCoords();
+
+  // 子から届いた行程を反映する
+  function applyReceivedRoute(cfg){
+    if(!cfg || !cfg.points || !cfg.plans || !cfg.dist) return false;
+    if(JSON.stringify(cfg) === JSON.stringify(route)) return false;  // 変化なし
+    route = cfg;
+    PLAN_NORMAL = buildPlan(route, 0);
+    PLAN_FAST   = buildPlan(route, 1);
+    rebuildCoords();
+    if(mapInstance){ try{ mapInstance.remove(); }catch(e){} mapInstance = null; kidMarker = null; }
+    var t = document.getElementById("appTitle");
+    if(t) t.textContent = route.title || "NW watcher";
+    var sub = document.getElementById("appSub");
+    if(sub && route.points.length>1){
+      sub.textContent = route.points[0].name.replace(/^S:/,"") + " → "
+        + route.points[route.points.length-1].name.replace(/^G:/,"");
+    }
+    return true;
   }
 
   function pinLabel(id){
+    var last = route.points.length - 1;
     if(id===0) return "S";
-    if(id===9) return "G";
-    return ["①","②","③","④","⑤","⑥","⑦","⑧"][id-1] || String(id);
+    if(id===last) return "G";
+    var circled = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"];
+    return circled[id-1] || String(id);
   }
 
   // ---------- 設定 ----------
@@ -407,6 +473,7 @@
         }
         latest = data;
         lastFetchOk = true;
+        applyReceivedRoute(data.route);   // 子が行程を変えていれば追従する
         actuals = data.actuals || {};
         PLAN = (data.planKey==="fast") ? PLAN_FAST : PLAN_NORMAL;
         render();
@@ -476,7 +543,8 @@
     var goalRow=rows[rows.length-1];
     var goalPredicted=goalRow.actualArrive||goalRow.predictedArrive;
     document.getElementById("goalEta").textContent=fmtTime(goalPredicted);
-    var gd=fmtDelta(goalPredicted && PLAN[9].arriveDate ? (goalPredicted-PLAN[9].arriveDate)/60000 : null);
+    var goalPlan=PLAN[PLAN.length-1];
+    var gd=fmtDelta(goalPredicted && goalPlan && goalPlan.arriveDate ? (goalPredicted-goalPlan.arriveDate)/60000 : null);
     var gdEl=document.getElementById("goalDelta");
     gdEl.textContent= gd ? gd.text : "—";
     gdEl.className="val"+(gd&&gd.cls!=="flat"?" "+gd.cls:"");
@@ -534,9 +602,10 @@
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18}).addTo(mapInstance);
       L.control.attribution({prefix:false}).addAttribution("© OpenStreetMap").addTo(mapInstance);
       var latlngs=[];
-      [0,1,2,3,4,5,6,7,8,9].forEach(function(id){
+      Object.keys(COORDS).map(Number).sort(function(a,b){return a-b;}).forEach(function(id){
         var c=COORDS[id];
-        var cls="routePin"+(id===0?" start":(id===9?" goal":""));
+        var lastId=route.points.length-1;
+        var cls="routePin"+(id===0?" start":(id===lastId?" goal":""));
         var icon=L.divIcon({className:"", html:'<div class="'+cls+'"><span>'+pinLabel(id)+'</span></div>',
           iconSize:[24,24], iconAnchor:[12,24], popupAnchor:[0,-22]});
         L.marker([c.lat,c.lng],{icon:icon}).addTo(mapInstance).bindPopup("<b>"+c.label+"</b>");
