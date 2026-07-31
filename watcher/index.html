@@ -152,6 +152,19 @@
   .updBar .go{background:#fff; color:#12314f;}
   .updBar .later{background:rgba(255,255,255,.2); color:#fff; padding:9px 11px;}
   .verNote{font-size:10.5px; color:var(--sub); text-align:center; padding:6px 0 0; font-weight:600;}
+  .findPanel{position:fixed; inset:0; z-index:320; background:rgba(8,16,32,.55);
+    display:none; align-items:flex-end; justify-content:center; padding:18px;}
+  .findPanel.show{display:flex;}
+  .fpBox{background:#fff; border-radius:18px; padding:18px; width:100%; max-width:420px;
+    box-shadow:0 12px 34px rgba(0,0,0,.3);}
+  .fpTitle{font-size:16px; font-weight:800; color:var(--navy); margin-bottom:6px;}
+  .fpNote{font-size:12.5px; color:var(--sub); line-height:1.65; margin-bottom:14px;}
+  .fpBtn{display:block; width:100%; text-align:center; text-decoration:none;
+    padding:14px; border-radius:12px; font-weight:800; font-size:14.5px; margin-bottom:9px;
+    background:#eef2f7; color:var(--navy); border:1px solid #dbe2ea;}
+  .fpBtn.main{background:#0a84ff; color:#fff; border-color:#0a84ff;}
+  .fpBtn.cancel{background:none; border:none; color:var(--sub); font-size:13.5px; margin-bottom:0;}
+
   .modalOverlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none;
     align-items:center; justify-content:center; z-index:300; padding:24px;}
   .modalOverlay.show{display:flex;}
@@ -243,6 +256,8 @@
     ・ペアコードは、お子さんのNight Walkerで作られたものを入力してください。
   </div>
 </main>
+
+<div class="findPanel" id="findPanel"></div>
 
 <div class="mapOverlay" id="mapOverlay">
   <div class="mapHeader">
@@ -769,12 +784,62 @@
   document.getElementById("closeMapBtn").addEventListener("click", function(){
     document.getElementById("mapOverlay").classList.remove("show");
   });
+  // ---------- 現在地を探す ----------
+  // ホーム画面から起動したPWAでは location.href によるアプリ起動が効かないことがあるため、
+  // リンクを作ってクリックする方式にする。開かなかった場合に備え、選択肢も表示する。
+  function openExternal(url){
+    try{
+      var a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return true;
+    }catch(e){
+      try{ window.location.href = url; return true; }catch(e2){ return false; }
+    }
+  }
+
+  function showFindPanel(){
+    var el = document.getElementById("findPanel");
+    if(!el) return;
+    var ios = isIOS();
+    el.innerHTML =
+      '<div class="fpBox">'
+      + '<div class="fpTitle">現在地を確認する</div>'
+      + '<div class="fpNote">'
+      + (ios ? '「探す」アプリが開かない場合は、下のiCloudをお使いください。'
+             : 'お子さんがiPhoneの場合は、iCloudをお使いください。')
+      + '</div>'
+      + (ios ? '<button type="button" class="fpBtn main" id="fpFindMy">「探す」アプリを開く</button>' : '')
+      + '<a class="fpBtn" href="https://www.icloud.com/find/" target="_blank" rel="noopener">iCloudで探す（iPhone向け）</a>'
+      + '<a class="fpBtn" href="https://www.google.com/android/find" target="_blank" rel="noopener">Googleで探す（Android向け）</a>'
+      + '<button type="button" class="fpBtn cancel" id="fpClose">閉じる</button>'
+      + '</div>';
+    el.className = "findPanel show";
+
+    var fm = document.getElementById("fpFindMy");
+    if(fm) fm.addEventListener("click", function(){
+      openExternal("findmy://");
+      setTimeout(function(){ el.className = "findPanel"; }, 800);
+    });
+    document.getElementById("fpClose").addEventListener("click", function(){
+      el.className = "findPanel";
+    });
+    el.addEventListener("click", function(ev){
+      if(ev.target === el) el.className = "findPanel";
+    });
+  }
+
   document.getElementById("findBtn").addEventListener("click", function(){
-    // 「探す」はiPhone専用。他の端末ではGoogleの端末を探すページを開く
     if(isIOS()){
-      window.location.href = "findmy://";
+      // まず「探す」を直接開いてみる。開かなかったときのために選択肢も出す。
+      openExternal("findmy://");
+      setTimeout(showFindPanel, 600);
     } else {
-      window.open("https://www.google.com/android/find", "_blank");
+      showFindPanel();
     }
   });
   document.getElementById("callBtn").addEventListener("click", function(){
@@ -922,7 +987,7 @@
     return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
-  var APP_VERSION = "2.1.0";
+  var APP_VERSION = "2.2.0";
   var VER_SKIP_KEY = "nwwatcher_skipver";
 
   function showUpdateBar(newVer, notes){
