@@ -99,6 +99,33 @@
   .subHead{font-size:12px; font-weight:800; color:var(--sub); margin:12px 0 5px;
     padding-top:10px; border-top:1px dashed var(--line);}
 
+  #certPreview img{width:100%; border-radius:10px; display:block;
+    box-shadow:0 3px 14px rgba(10,20,42,.25);}
+  #certPreview .waiting{font-size:12.5px; color:var(--sub); line-height:1.8; padding:8px 0;}
+  .certBtns{display:flex; gap:9px; margin-top:12px;}
+  .certBtn{flex:1; padding:12px 6px; border:1px solid var(--navy); background:#fff;
+    color:var(--navy); border-radius:10px; font-weight:800; font-size:13.5px;}
+  .certBtn.main{background:var(--navy); color:#fff;}
+  .certNote{font-size:11.5px; color:var(--sub); margin-top:9px; line-height:1.7;}
+
+  .mhItem{display:flex; gap:11px; padding:11px 0; border-bottom:1px solid var(--line);}
+  .mhItem:last-child{border-bottom:none;}
+  .mhIcon{flex:0 0 auto; width:38px; height:38px; border-radius:11px; display:flex;
+    align-items:center; justify-content:center; font-size:20px; color:#fff;}
+  .mhIcon.good{background:linear-gradient(135deg,#1e8e3e,#2fbe61);}
+  .mhIcon.ok{background:linear-gradient(135deg,#1c4a86,#2f6bb8);}
+  .mhIcon.warn{background:linear-gradient(135deg,#b06a00,#d99000);}
+  .mhBody{flex:1; min-width:0;}
+  .mhTop{display:flex; align-items:baseline; gap:8px; margin-bottom:2px;}
+  .mhTime{flex:0 0 auto; font-size:13px; font-weight:800; color:var(--navy);}
+  .mhPlace{flex:1; min-width:0; font-size:11.5px; color:var(--sub); font-weight:700;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mhHead{font-size:13.5px; font-weight:800; color:#28313c; line-height:1.5;}
+  .mhStats{font-size:11.5px; color:var(--sub); font-weight:600; line-height:1.7; margin-top:3px;}
+  .mhEmpty{font-size:12.5px; color:var(--sub); line-height:1.8; padding:6px 0;}
+  .mhShare{width:100%; margin-top:12px; padding:12px; border:1px solid var(--line);
+    background:#f6f8fb; color:var(--navy); border-radius:10px; font-weight:800; font-size:13px;}
+
   .summaryTitle{font-size:14px; font-weight:800; color:var(--navy); margin-bottom:10px;}
   .chartNote{font-size:11px; color:var(--sub); margin-top:8px; font-weight:600; line-height:1.6;}
   .tableWrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
@@ -130,6 +157,12 @@
     text-align:center; display:none; line-height:1.5;
   }
   .paceResult.show{display:block;}
+  /* 計測できた瞬間に点滅させる。マナーモードで音が鳴らなくても気づけるように。 */
+  .paceResult.flash{animation:paceFlash .5s ease-in-out 4;}
+  @keyframes paceFlash{
+    0%,100%{transform:scale(1); filter:brightness(1);}
+    50%{transform:scale(1.045); filter:brightness(1.35);}
+  }
   .paceResult.red{background:#fdeaea; color:#c62828; border:1px solid #f3c6c6;}
   .paceResult.yellow{background:#fff6da; color:#8a6d00; border:1px solid #f0e0a0;}
   .paceResult.blue{background:#e8f0fb; color:#1b3a5c; border:1px solid #c3d7ef;}
@@ -301,6 +334,11 @@
     margin-top:18px; background:rgba(255,255,255,.94); border:none; color:#12314f;
     border-radius:24px; padding:13px 38px; font-weight:800; font-size:15px;
     animation:msgSlide .55s .48s cubic-bezier(.2,1.2,.4,1) both;
+  }
+  .msgImg{
+    display:block; margin:10px auto 0; background:rgba(255,255,255,.22); border:1px solid rgba(255,255,255,.4);
+    color:#fff; border-radius:22px; padding:10px 22px; font-weight:800; font-size:12.5px;
+    animation:msgSlide .55s .58s cubic-bezier(.2,1.2,.4,1) both;
   }
   /* きらめき */
   .msgSpark{position:absolute; z-index:1; pointer-events:none;
@@ -568,6 +606,19 @@
   </section>
 
   <section id="viewSummary" style="display:none;">
+    <div class="card" id="certCard">
+      <div class="summaryTitle">完歩証</div>
+      <div id="certPreview"></div>
+      <div class="certBtns">
+        <button type="button" class="certBtn main" id="certSaveBtn">📥 保存する</button>
+        <button type="button" class="certBtn" id="certShareBtn">📤 送る</button>
+      </div>
+      <div class="certNote" id="certNote"></div>
+    </div>
+    <div class="card">
+      <div class="summaryTitle">メッセージの記録</div>
+      <div id="msgHistory"></div>
+    </div>
     <div class="card">
       <div class="summaryTitle">区間ごとの平均ペース</div>
       <div id="paceChart"></div>
@@ -1051,6 +1102,7 @@
     var paceSum = 0, paceCount = 0;
     var paceFactor = 1;
     var lastActualIdx = -1; // 実際到着(or出発)が入力された最後の地点index
+    var startIsActual = false; // 実際の出発時刻が記録されているか
 
     for(var i=0;i<PLAN.length;i++){
       var p = PLAN[i];
@@ -1059,6 +1111,7 @@
       if(p.type === "start"){
         var actualDepart0 = act.depart ? combineWithBestDate(act.depart, p.departDate) : null;
         var effectiveDepart = actualDepart0 || p.departDate;
+        startIsActual = !!actualDepart0;   // 実際の出発が記録されているか
         refDepart = effectiveDepart;
         if(actualDepart0) lastActualIdx = i;
         rows.push({
@@ -1073,7 +1126,15 @@
 
       var plannedArrive = p.arriveDate;
       var plannedDepart = p.departDate; // goalはnull
-      var actualArrive = act.arrive ? combineWithBestDate(act.arrive, plannedArrive) : null;
+      // 日付の決め方：直前の出発時刻を基準にする。
+      // 計画時刻を基準にすると、実際が計画と大きく違う時間帯のときに
+      // 別の日と解釈され、到着予想が大きく狂うため。
+      var arriveBase = refDepart || plannedArrive;
+      var actualArrive = act.arrive ? combineWithBestDate(act.arrive, arriveBase) : null;
+      // 直前の出発より前になることはないので、その場合は翌日とみなす
+      if(actualArrive && refDepart && actualArrive.getTime() < refDepart.getTime()){
+        actualArrive = new Date(actualArrive.getTime() + 24*60*60000);
+      }
 
       var predictedArrive = refDepart ? new Date(refDepart.getTime() + p.walkMin*60000*paceFactor) : null;
 
@@ -1081,11 +1142,22 @@
       if(actualArrive && refDepart){
         walkActualMin = (actualArrive.getTime() - refDepart.getTime())/60000;
         deltaWalkMin = walkActualMin - p.walkMin;
-        var ratio = p.walkMin>0 ? (walkActualMin / p.walkMin) : 1;
-        // 極端値(誤入力等)は影響を抑えるため 0.5〜2.0 にクランプ
-        ratio = Math.max(0.5, Math.min(2.0, ratio));
-        paceSum += ratio; paceCount++;
-        paceFactor = paceSum / paceCount;
+        // 歩行時間が0以下になるのは、実際の出発時刻が未入力で
+        // 計画の出発時刻(例:18:00)を使っているのに、実際は別の時間帯に歩いている場合。
+        // そのままだとペース比が壊れ、到着予想が大きく狂うため、この区間は計算に使わない。
+        // 出発を記録していない状態で最初の区間を計算すると、
+        // 計画の出発時刻との差がそのまま誤差になるため、その区間は学習に使わない。
+        var usable = (walkActualMin > 0) && (startIsActual || i > 1);
+        if(usable){
+          var ratio = p.walkMin>0 ? (walkActualMin / p.walkMin) : 1;
+          // 極端値(誤入力等)は影響を抑えるため 0.5〜2.0 にクランプ
+          ratio = Math.max(0.5, Math.min(2.0, ratio));
+          paceSum += ratio; paceCount++;
+          paceFactor = paceSum / paceCount;
+        } else {
+          walkActualMin = null;   // 表示にも使わない
+          deltaWalkMin = null;
+        }
         lastActualIdx = i;
       }
 
@@ -1153,7 +1225,11 @@
     }
     var nextHtml = "";
     if(nextRow){
-      var d = fmtDelta(nextRow.predictedArrive && nextRow.plannedArrive ? (nextRow.predictedArrive-nextRow.plannedArrive)/60000 : null);
+      // 予定と大きく（3時間以上）ずれている場合は、比較しても意味がないので差を出さない。
+      // 実際の出発を記録せずに歩き始めた場合などに、極端な数字が出るのを防ぐ。
+      var rawDiff = (nextRow.predictedArrive && nextRow.plannedArrive)
+        ? (nextRow.predictedArrive-nextRow.plannedArrive)/60000 : null;
+      var d = (rawDiff !== null && Math.abs(rawDiff) <= 180) ? fmtDelta(rawDiff) : null;
       nextHtml = '<div class="row"><span class="label">次の到着予想：'+nextRow.plan.name.replace(/^[①②③④⑤⑥⑦⑧]/,"")+'</span>'+
         '<div class="valueLine"><span class="value">'+fmtTimeWithDate(nextRow.predictedArrive, PLAN[0].departDate)+'</span>'+
         (d? ' <span class="delta '+d.cls+'">('+d.text+')</span>':'')+'</div></div>';
@@ -1161,7 +1237,9 @@
 
     var goalPredicted = goalRow.actualArrive || goalRow.predictedArrive;
     var goalPlan = PLAN[PLAN.length-1];
-    var goalDelta = fmtDelta(goalPredicted && goalPlan && goalPlan.arriveDate ? (goalPredicted-goalPlan.arriveDate)/60000 : null);
+    var goalRaw = (goalPredicted && goalPlan && goalPlan.arriveDate)
+      ? (goalPredicted-goalPlan.arriveDate)/60000 : null;
+    var goalDelta = (goalRaw !== null && Math.abs(goalRaw) <= 180) ? fmtDelta(goalRaw) : null;
     var goalHtml = '<div class="row"><span class="label">ゴール到着予想（猿田彦神社）</span>'+
       '<div class="valueLine"><span class="value big">'+fmtTimeWithDate(goalPredicted, PLAN[0].departDate)+'</span>'+
       (goalDelta? ' <span class="delta '+goalDelta.cls+'">('+goalDelta.text+')</span>':'')+'</div></div>';
@@ -1248,9 +1326,10 @@
         (d? ' <span class="delta '+d.cls+'">（'+d.text+'）</span>':'')+'</div>';
     }
 
+    // 全体ビューと区間別ビューで同じidが重複しないよう、idではなくボタンの隣を探す
     html += '<div class="paceCheckRow">'
       + '<button type="button" class="paceCheckBtn" data-pc-id="'+toP.id+'">📊 ペースチェック（直近1分）</button>'
-      + '<div class="paceResult" id="paceResult-'+toP.id+'"></div>'
+      + '<div class="paceResult"></div>'
       + '</div>';
 
     html += '</div>';
@@ -1356,7 +1435,9 @@
     Array.prototype.forEach.call(pcBtns, function(btn){
       btn.addEventListener("click", function(){
         var id = this.getAttribute("data-pc-id");
-        startPaceCheck(id);
+        // 押したボタンと同じ枠の中にある表示欄を使う
+        var box = this.parentNode ? this.parentNode.querySelector(".paceResult") : null;
+        startPaceCheck(id, box);
       });
     });
   }
@@ -1366,10 +1447,12 @@
   // アラーム音を鳴らして結果を表示する（歩きながら画面を見ずに済むように）。
   var paceTimer = null;
   var paceTargetId = null;
+  var paceTargetEl = null;   // 結果を出す欄（押したボタンのすぐ隣）
 
-  function startPaceCheck(id){
+  function startPaceCheck(id, box){
     if(paceTimer){ clearInterval(paceTimer); paceTimer = null; }
     paceTargetId = id;
+    paceTargetEl = box || null;
     primeAudio();          // 最初のタップの中で音を使えるようにしておく
     tickPaceCheck(true);
     paceTimer = setInterval(function(){ tickPaceCheck(false); }, 1000);
@@ -1377,8 +1460,8 @@
 
   function tickPaceCheck(isFirst){
     var id = paceTargetId;
-    var resultEl = document.getElementById("paceResult-"+id);
-    if(!resultEl){ clearInterval(paceTimer); paceTimer = null; return; }
+    var resultEl = paceTargetEl;
+    if(!resultEl || !resultEl.parentNode){ clearInterval(paceTimer); paceTimer = null; return; }
     var planLeg = PLAN[parseInt(id,10)];
     var res = computeRecentPace();
 
@@ -1387,7 +1470,7 @@
       if(res.error === "計測時間不足"){
         var remain = Math.max(1, Math.ceil(MIN_SPAN_SEC - (res.spanSec||0)));
         resultEl.innerHTML = "⏱ 計測中です（あと約"+remain+"秒）<br>"
-          + "<span style=\"font-weight:600;font-size:11.5px\">歩き続けてください。計測できたら音でお知らせします。</span>";
+          + "<span style=\"font-weight:600;font-size:11.5px\">歩き続けてください。計測できたら振動でお知らせします。</span>";
       } else if(res.error === "移動距離不足"){
         resultEl.innerHTML = "⏱ 計測中です<br>"
           + "<span style=\"font-weight:600;font-size:11.5px\">移動が検出できていません（直近1分で約"+Math.round(res.distM)+"m）。歩き続けてください。</span>";
@@ -1417,14 +1500,32 @@
       diffText = absSec<5 ? "ほぼ予定どおり"
         : "予定より "+diffStr+"/km "+(diff>0?"遅い":"速い");
     }
-    resultEl.className = "paceResult show "+cls;
+    resultEl.className = "paceResult show flash "+cls;
+    // 少し経ったら点滅を止める（クラスを外す）
+    setTimeout(function(){
+      if(resultEl) resultEl.className = "paceResult show "+cls;
+    }, 2600);
     resultEl.innerHTML = label
       + "<br>実際 "+formatPaceMinSec(res.pace)+" ／ 予定 "+paceFromSpeed(planLeg.speed)
       + "<br>"+diffText
       + "<br><span style=\"font-weight:600;font-size:11px;opacity:.75\">直近"+Math.round(res.spanSec)+"秒／"+Math.round(res.distM)+"mで計測</span>";
 
     playPaceAlarm(tone);
-    if(navigator.vibrate){ try{ navigator.vibrate([120,80,120]); }catch(e){} }
+    vibratePattern(tone);
+  }
+
+  // 判定ごとに振動を変える。
+  // iOSはマナーモード中に音を鳴らさないため、振動が主な伝達手段になる。
+  //   順調  … 短く2回（トン、トン）
+  //   速い  … 短く3回（トトト）
+  //   遅い  … 長く2回（ブーー、ブーー）
+  function vibratePattern(tone){
+    if(!navigator.vibrate) return;
+    var pat;
+    if(tone === "ok")        pat = [140, 120, 140];
+    else if(tone === "fast") pat = [90, 90, 90, 90, 90];
+    else                     pat = [400, 200, 400];
+    try{ navigator.vibrate(pat); }catch(e){}
   }
 
   // ---------- 音 ----------
@@ -1850,7 +1951,618 @@
     return h;
   }
 
+  // ==========================================================
+  //  完歩証
+  // ==========================================================
+  function certData(){
+    var sched = computeSchedule();
+    var rows = buildSummaryRows();
+    var startRow = sched.rows[0];
+    var goalRow  = sched.rows[sched.rows.length-1];
+
+    var doneKm = 0, totalKm = 0, totWalk = 0, totRest = 0, doneLegs = 0;
+    rows.forEach(function(r){
+      totalKm += r.dist || 0;
+      if(r.arriveActual){ doneKm += r.dist || 0; doneLegs++; }
+      if(r.walkMin) totWalk += r.walkMin;
+      if(r.restMin) totRest += r.restMin;
+    });
+
+    var startAt = startRow.actualDepart;
+    var goalAt  = goalRow.actualArrive;
+    var elapsed = (startAt && goalAt) ? (goalAt - startAt)/60000 : null;
+    var pace = (totWalk > 0 && doneKm > 0) ? (totWalk/doneKm) : null;
+
+    var delay = null;
+    if(goalAt && goalRow.plannedArrive){
+      var d = (goalAt - goalRow.plannedArrive)/60000;
+      if(Math.abs(d) <= 180) delay = d;
+    }
+
+    return {
+      finished: !!goalAt,
+      name: userName || "",
+      title: route.title || "Night Walk",
+      date: route.date || "",
+      fromName: (route.points[0] ? route.points[0].name : "").replace(/^S:/,""),
+      toName: (route.points[route.points.length-1] ? route.points[route.points.length-1].name : "").replace(/^G:/,""),
+      startAt: startAt, goalAt: goalAt,
+      elapsed: elapsed, doneKm: doneKm, totalKm: totalKm,
+      doneLegs: doneLegs, totalLegs: rows.length,
+      walkMin: totWalk, restMin: totRest, pace: pace, delay: delay,
+      planName: (currentPlanKey === "fast") ? route.plans[1].name : route.plans[0].name
+    };
+  }
+
+  // 完歩証を描く（縦長・保存や印刷にも耐える大きさ）
+  function buildCertCanvas(){
+    var c = certData();
+    var W = 1000, H = 1414;          // A4に近い比率
+    var cv = document.createElement("canvas");
+    cv.width = W; cv.height = H;
+    var g = cv.getContext("2d");
+
+    // 背景（夜空）
+    var bg = g.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,"#0a1730"); bg.addColorStop(0.55,"#12294c"); bg.addColorStop(1,"#0a1628");
+    g.fillStyle = bg; g.fillRect(0,0,W,H);
+
+    // 星
+    for(var i=0;i<70;i++){
+      var sx = Math.random()*W, sy = Math.random()*H*0.42;
+      var r = Math.random()*1.9 + 0.7;
+      g.fillStyle = "rgba(255,255,255," + (0.35 + Math.random()*0.6).toFixed(2) + ")";
+      g.beginPath(); g.arc(sx, sy, r, 0, Math.PI*2); g.fill();
+    }
+
+    // 三日月（右上・光る側は右）
+    var mx = W-170, my = 150, mr = 62;
+    g.fillStyle = "#f6ecc9";
+    g.beginPath(); g.arc(mx,my,mr,0,Math.PI*2); g.fill();
+    g.save();
+    g.globalCompositeOperation = "destination-out";
+    g.beginPath(); g.arc(mx - mr*0.58, my - mr*0.26, mr*1.05, 0, Math.PI*2); g.fill();
+    g.restore();
+
+    // 金の枠
+    var pad = 54;
+    var gold = g.createLinearGradient(0,0,W,H);
+    gold.addColorStop(0,"#f3d98c"); gold.addColorStop(0.5,"#d4a933"); gold.addColorStop(1,"#f3d98c");
+    g.strokeStyle = gold; g.lineWidth = 5;
+    roundRect(g, pad, pad, W-pad*2, H-pad*2, 26); g.stroke();
+    g.lineWidth = 1.5;
+    roundRect(g, pad+13, pad+13, W-(pad+13)*2, H-(pad+13)*2, 18); g.stroke();
+
+    g.textAlign = "center";
+
+    // 表題
+    g.fillStyle = gold;
+    g.font = "bold 92px -apple-system, 'Hiragino Mincho ProN', serif";
+    g.fillText(c.finished ? "完 歩 証" : "歩 行 記 録", W/2, 268);
+
+    g.strokeStyle = "rgba(243,217,140,.55)"; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(W/2-150, 300); g.lineTo(W/2+150, 300); g.stroke();
+
+    // 名前
+    g.fillStyle = "#ffffff";
+    if(c.name){
+      g.font = "bold 62px -apple-system, 'Hiragino Sans', sans-serif";
+      g.fillText(c.name, W/2, 400);
+      g.fillStyle = "#a9c4e8";
+      g.font = "600 26px -apple-system, 'Hiragino Sans', sans-serif";
+      g.fillText("殿", W/2 + g.measureText(c.name).width/2 + 200, 400);
+    }
+
+    // 本文
+    g.fillStyle = "#dbe8fa";
+    g.font = "600 29px -apple-system, 'Hiragino Sans', sans-serif";
+    var line1 = c.finished
+      ? "あなたは下記のとおり全行程を歩き抜き"
+      : "あなたは下記のとおり歩きました";
+    g.fillText(line1, W/2, 470);
+    if(c.finished) g.fillText("見事に完歩されたことを証します", W/2, 512);
+
+    // 大きな距離
+    g.fillStyle = gold;
+    g.font = "bold 132px -apple-system, sans-serif";
+    g.fillText(c.doneKm.toFixed(1), W/2 - 44, 660);
+    g.font = "bold 46px -apple-system, sans-serif";
+    g.fillText("km", W/2 + 118, 660);
+
+    // 記録の枠
+    var bx = 130, by = 716, bw = W-260, bh = 396;
+    g.fillStyle = "rgba(255,255,255,.07)";
+    roundRect(g, bx, by, bw, bh, 20); g.fill();
+    g.strokeStyle = "rgba(255,255,255,.2)"; g.lineWidth = 1.5;
+    roundRect(g, bx, by, bw, bh, 20); g.stroke();
+
+    var items = [];
+    if(c.elapsed != null) items.push(["所要時間", fmtDurationMin(c.elapsed)]);
+    if(c.startAt && c.goalAt) items.push(["発着時刻", fmtTime(c.startAt) + " → " + fmtTime(c.goalAt)]);
+    if(c.pace) items.push(["平均ペース", formatPaceMinSec(c.pace)]);
+    items.push(["歩行時間", fmtDurationMin(c.walkMin)]);
+    items.push(["休憩時間", fmtDurationMin(c.restMin)]);
+    items.push(["通過地点", c.doneLegs + " / " + c.totalLegs + " 区間"]);
+    if(c.delay != null){
+      var dd = fmtDelta(c.delay);
+      if(dd) items.push(["予定との差", dd.text]);
+    }
+
+    var ry = by + 56;
+    items.forEach(function(it){
+      g.textAlign = "left";
+      g.fillStyle = "#9fc0e8";
+      g.font = "600 25px -apple-system, 'Hiragino Sans', sans-serif";
+      g.fillText(it[0], bx+42, ry);
+      g.textAlign = "right";
+      g.fillStyle = "#ffffff";
+      g.font = "bold 29px -apple-system, 'Hiragino Sans', sans-serif";
+      g.fillText(it[1], bx+bw-42, ry);
+      g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(bx+34, ry+16); g.lineTo(bx+bw-34, ry+16); g.stroke();
+      ry += 49;
+    });
+
+    // 大会名とコース
+    g.textAlign = "center";
+    g.fillStyle = "#ffffff";
+    g.font = "bold 34px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillText(c.title, W/2, 1180);
+    g.fillStyle = "#9fc0e8";
+    g.font = "600 24px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillText(c.fromName + " → " + c.toName, W/2, 1220);
+    if(c.date){
+      var dt = c.date.split("-");
+      g.fillText(dt[0] + "年" + Number(dt[1]) + "月" + Number(dt[2]) + "日", W/2, 1258);
+    }
+
+    // 歩く人のシルエット
+    drawWalker(g, W/2, 1352, 1.25);
+
+    return cv;
+  }
+
+  // 完歩証に入れる歩く人の絵
+  function drawWalker(g, cx, baseY, scale){
+    g.save();
+    g.translate(cx, baseY);
+    g.scale(scale, scale);
+    g.fillStyle = "rgba(243,217,140,.85)";
+    function P(x,y){ return [x*2.1, y*2.1]; }
+    function bar(x0,y0,x1,y1,w){
+      var a=P(x0,y0), b=P(x1,y1);
+      var dx=b[0]-a[0], dy=b[1]-a[1], L=Math.hypot(dx,dy);
+      if(!L) return;
+      var nx=-dy/L, ny=dx/L, hw=w*2.1/2;
+      g.beginPath();
+      g.moveTo(a[0]+nx*hw, a[1]+ny*hw); g.lineTo(b[0]+nx*hw, b[1]+ny*hw);
+      g.lineTo(b[0]-nx*hw, b[1]-ny*hw); g.lineTo(a[0]-nx*hw, a[1]-ny*hw);
+      g.closePath(); g.fill();
+      g.beginPath(); g.arc(a[0],a[1],hw,0,Math.PI*2); g.fill();
+      g.beginPath(); g.arc(b[0],b[1],hw,0,Math.PI*2); g.fill();
+    }
+    var h=P(0,-12.4);
+    g.beginPath(); g.arc(h[0],h[1],1.5*2.1,0,Math.PI*2); g.fill();
+    var t=[P(-1.25,-10.6),P(1.6,-10.9),P(2.35,-3.0),P(-1.95,-2.5)];
+    g.beginPath(); g.moveTo(t[0][0],t[0][1]);
+    for(var i=1;i<t.length;i++) g.lineTo(t[i][0],t[i][1]);
+    g.closePath(); g.fill();
+    bar(-0.2,-2.7,-1.7,0.6,2.6);  bar(-1.7,0.6,-3.5,2.5,2.1);
+    bar(0.25,-2.6,2.0,1.1,2.7);   bar(2.0,1.1,3.2,4.7,2.2);
+    bar(0.55,-10.0,2.6,-8.2,1.9); bar(2.6,-8.2,3.4,-5.6,1.6);
+    bar(-0.6,-10.1,-2.5,-9.0,1.9);bar(-2.5,-9.0,-3.4,-6.4,1.6);
+    g.restore();
+  }
+
+  // ---------- 1件のメッセージを画像にして共有する ----------
+  function buildOneMsgCanvas(m){
+    var W = 900, H = 620;
+    var cv = document.createElement("canvas");
+    cv.width = W; cv.height = H;
+    var g = cv.getContext("2d");
+
+    var cols = {
+      good: ["#0f7a35", "#2fbe61"],
+      ok:   ["#123a70", "#2f6bb8"],
+      warn: ["#8a5200", "#d99000"]
+    };
+    var c = cols[m.tone] || cols.ok;
+    var grd = g.createLinearGradient(0,0,W,H);
+    grd.addColorStop(0, c[0]); grd.addColorStop(1, c[1]);
+    g.fillStyle = grd; g.fillRect(0,0,W,H);
+
+    // 光の粒
+    g.fillStyle = "rgba(255,255,255,.16)";
+    for(var i=0;i<26;i++){
+      var r = 3 + Math.random()*9;
+      g.beginPath();
+      g.arc(Math.random()*W, Math.random()*H, r, 0, Math.PI*2);
+      g.fill();
+    }
+
+    g.textAlign = "center";
+    g.fillStyle = "#ffffff";
+    g.font = "84px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillText(m.icon || "", W/2, 168);
+
+    g.font = "bold 52px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillText(m.head || "", W/2, 260);
+
+    g.font = "600 27px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillStyle = "rgba(255,255,255,.93)";
+    wrapText(g, m.sub || "", W/2, 316, W-140, 38);
+
+    if(m.stats && m.stats.length){
+      var boxY = 372, boxH = 44*m.stats.length + 30;
+      g.fillStyle = "rgba(255,255,255,.18)";
+      roundRect(g, 110, boxY, W-220, boxH, 20); g.fill();
+      g.fillStyle = "#ffffff";
+      g.font = "bold 26px -apple-system, 'Hiragino Sans', sans-serif";
+      for(var k=0;k<m.stats.length;k++){
+        g.fillText(m.stats[k], W/2, boxY + 44 + k*44);
+      }
+    }
+
+    g.fillStyle = "rgba(255,255,255,.75)";
+    g.font = "600 20px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillText((route.title || "Night Walk") + (userName ? "　" + userName : ""), W/2, H-34);
+    return cv;
+  }
+  function roundRect(g,x,y,w,h,r){
+    g.beginPath();
+    g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+    g.lineTo(x+w,y+h-r); g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    g.lineTo(x+r,y+h); g.quadraticCurveTo(x,y+h,x,y+h-r);
+    g.lineTo(x,y+r); g.quadraticCurveTo(x,y,x+r,y); g.closePath();
+  }
+  function wrapText(g, text, cx, y, maxW, lh){
+    var chars = String(text).split("");
+    var line = "";
+    for(var i=0;i<chars.length;i++){
+      var t = line + chars[i];
+      if(g.measureText(t).width > maxW && line){
+        g.fillText(line, cx, y); line = chars[i]; y += lh;
+      } else { line = t; }
+    }
+    if(line) g.fillText(line, cx, y);
+  }
+
+  function shareOneMessageImage(m){
+    var cv;
+    try{ cv = buildOneMsgCanvas(m); }catch(e){ return; }
+    cv.toBlob(function(blob){
+      if(!blob) return;
+      var file = new File([blob], "nightwalk.png", {type:"image/png"});
+      var text = m.head + (m.stats && m.stats.length ? "\n" + m.stats.join("　/　") : "");
+      var payload = {files:[file]};
+      try{
+        if(navigator.canShare && navigator.canShare({files:[file], text:text})){
+          payload = {files:[file], text:text};
+        }
+      }catch(e){}
+      if(navigator.canShare && navigator.canShare(payload) && navigator.share){
+        navigator.share(payload).catch(function(err){
+          if(err && err.name === "AbortError") return;
+          downloadBlob(blob, "nightwalk.png", document.getElementById("pdfNote"));
+        });
+      } else {
+        downloadBlob(blob, "nightwalk.png", document.getElementById("pdfNote"));
+      }
+    }, "image/png");
+  }
+
+  // ---------- 完歩証の表示・保存・共有 ----------
+  var certBlob = null;
+
+  function renderCert(){
+    var box = document.getElementById("certPreview");
+    var note = document.getElementById("certNote");
+    if(!box) return;
+    var c = certData();
+
+    // 何も記録がないうちは案内だけ
+    if(!c.startAt && c.doneLegs === 0){
+      box.innerHTML = '<div class="waiting">歩き始めると、ここに完歩証が作られます。<br>'
+        + '各地点で「到着」「出発」を押して記録してください。</div>';
+      if(note) note.textContent = "";
+      certBlob = null;
+      return;
+    }
+
+    var cv;
+    try{ cv = buildCertCanvas(); }
+    catch(e){
+      box.innerHTML = '<div class="waiting">完歩証を作れませんでした。</div>';
+      return;
+    }
+    try{
+      box.innerHTML = '<img src="' + cv.toDataURL("image/png") + '" alt="完歩証">';
+    }catch(e){
+      box.innerHTML = '<div class="waiting">完歩証を表示できませんでした。</div>';
+      return;
+    }
+    if(note){
+      note.style.color = "";
+      note.textContent = c.finished
+        ? "ゴールまで完歩されました。おつかれさまでした。"
+        : "まだ途中の記録です。ゴールすると「完歩証」になります。";
+    }
+    cv.toBlob(function(b){ certBlob = b; }, "image/png");
+  }
+
+  function certFileName(){
+    var c = certData();
+    var nm = (c.name || "record").replace(/[\\/:*?"<>|\s]/g, "");
+    return "完歩証_" + nm + "_" + (c.date || "") + ".png";
+  }
+
+  function withCertBlob(cb){
+    if(certBlob){ cb(certBlob); return; }
+    try{
+      buildCertCanvas().toBlob(function(b){ certBlob = b; cb(b); }, "image/png");
+    }catch(e){ cb(null); }
+  }
+
+  document.getElementById("certSaveBtn").addEventListener("click", function(){
+    var note = document.getElementById("certNote");
+    withCertBlob(function(b){
+      if(!b){ if(note){ note.textContent="完歩証を作れませんでした。"; note.style.color="#c62828"; } return; }
+      downloadBlob(b, certFileName(), note);
+    });
+  });
+
+  document.getElementById("certShareBtn").addEventListener("click", function(){
+    var note = document.getElementById("certNote");
+    withCertBlob(function(b){
+      if(!b){ if(note){ note.textContent="完歩証を作れませんでした。"; note.style.color="#c62828"; } return; }
+      var c = certData();
+      var file = new File([b], certFileName(), {type:"image/png"});
+      var text = (c.finished ? "完歩しました！ " : "") + c.title
+        + "　" + c.doneKm.toFixed(1) + "km"
+        + (c.elapsed != null ? "　" + fmtDurationMin(c.elapsed) : "");
+      var payload = {files:[file]};
+      try{
+        if(navigator.canShare && navigator.canShare({files:[file], text:text})){
+          payload = {files:[file], text:text};
+        }
+      }catch(e){}
+      if(navigator.canShare && navigator.canShare(payload) && navigator.share){
+        navigator.share(payload).catch(function(err){
+          if(err && err.name === "AbortError") return;
+          downloadBlob(b, certFileName(), note);
+        });
+      } else {
+        downloadBlob(b, certFileName(), note);
+      }
+    });
+  });
+
+  // ---------- メッセージの記録を表示する ----------
+  // 入力済みの実際の時刻から、その時点のメッセージを組み立て直す。
+  // これにより、この機能を入れる前に歩いた記録も表示できる。
+  function buildMsgLogFromActuals(){
+    var out = [];
+    var sched = computeSchedule();
+    var last = PLAN.length - 1;
+
+    for(var i=0;i<PLAN.length;i++){
+      var p = PLAN[i];
+      var act = actuals[p.id];
+      if(!act) continue;
+      var row = sched.rows[i];
+      var place = p.name.replace(/^出発：/,"").replace(/^ゴール：/,"").replace(/^[SG]:/,"");
+
+      // 到着
+      if(act.arrive && row.actualArrive){
+        var ctxA = rebuildContext(sched, i, "arrive");
+        var mA;
+        if(i === last){
+          var gs = [];
+          if(ctxA.elapsedMin != null) gs.push("所要時間　"+fmtDurationMin(ctxA.elapsedMin));
+          gs.push("到着　"+ctxA.timeStr);
+          if(ctxA.delayMin != null){ var gd = fmtDelta(ctxA.delayMin); if(gd) gs.push("予定との差　"+gd.text); }
+          mA = {icon:"🏆", head:"完歩おめでとう！", tone:"good",
+                sub:"本当におつかれさまでした。", stats:gs};
+        } else {
+          mA = arriveMessage(ctxA, place);
+        }
+        out.push({ t: row.actualArrive.getTime(), time: ctxA.timeStr, kind: (i===last?"goal":"point"),
+          role:"arrive", id:p.id, place:place,
+          icon:mA.icon, head:mA.head, sub:mA.sub, stats:mA.stats||[], tone:mA.tone });
+      }
+
+      // 出発
+      if(act.depart && row.actualDepart){
+        var ctxD = rebuildContext(sched, i, "depart");
+        var mD;
+        if(i === 0){
+          mD = {icon:"🌙", head:"いってらっしゃい！", tone:"ok",
+                sub:"長い夜のはじまりです。", stats:["出発　"+ctxD.timeStr]};
+        } else {
+          mD = departMessage(ctxD, place, (PLAN[i+1] ? PLAN[i+1].name : null));
+        }
+        out.push({ t: row.actualDepart.getTime(), time: ctxD.timeStr, kind:(i===0?"start":"point"),
+          role:"depart", id:p.id, place:place,
+          icon:mD.icon, head:mD.head, sub:mD.sub, stats:mD.stats||[], tone:mD.tone });
+      }
+    }
+    out.sort(function(a,b){ return a.t - b.t; });
+    return out;
+  }
+
+  // 過去の時点の状況を、記録から組み立て直す
+  function rebuildContext(sched, id, role){
+    var rows = sched.rows;
+    var row = rows[id];
+    var startRow = rows[0];
+    var startAt = startRow.actualDepart || startRow.plannedDepart;
+    var nowT = (role === "arrive") ? row.actualArrive : row.actualDepart;
+    if(!nowT) nowT = new Date();
+
+    var elapsedMin = startAt ? (nowT - startAt)/60000 : null;
+    // 出発を記録していない場合、経過時間は当てにならないので出さない
+    if(!startRow.actualDepart) elapsedMin = null;
+
+    var planned = (role === "arrive") ? row.plannedArrive : row.plannedDepart;
+    var delayMin = planned ? (nowT - planned)/60000 : null;
+    if(delayMin !== null && Math.abs(delayMin) > 180) delayMin = null;   // 極端な値は出さない
+
+    var paceDiff = null, actualPace = null;
+    if(role === "arrive" && row.walkActualMin && row.plan.dist > 0){
+      actualPace = row.walkActualMin / row.plan.dist;
+      paceDiff = actualPace - 60/row.plan.speed;
+    }
+
+    var restKm = 0, restPts = 0;
+    for(var i=1;i<rows.length;i++){
+      if(i > id){ restKm += rows[i].plan.dist || 0; restPts++; }
+    }
+
+    var goalRow = rows[rows.length-1];
+    var goalEta = goalRow.actualArrive || goalRow.predictedArrive;
+
+    return { sched:sched, row:row, elapsedMin:elapsedMin, delayMin:delayMin,
+      paceDiff:paceDiff, actualPace:actualPace, restKm:restKm, restPts:restPts,
+      goalEta:goalEta, isStart:row.plan.type==="start", isGoal:row.plan.type==="goal",
+      timeStr: fmtTime(nowT) };
+  }
+
+  function renderMsgHistory(){
+    var el = document.getElementById("msgHistory");
+    if(!el) return;
+
+    // 記録された時刻から組み立てる（この機能を入れる前の記録も表示できる）
+    var list = buildMsgLogFromActuals();
+
+    if(!list.length){
+      el.innerHTML = '<div class="mhEmpty">まだ記録がありません。'
+        + '各地点で「到着」「出発」を押すと、そのときのメッセージがここに残ります。</div>';
+      return;
+    }
+    var h = "";
+    for(var i=list.length-1;i>=0;i--){    // 新しい順
+      var m = list[i];
+      var act = (m.role === "arrive") ? "到着" : "出発";
+      h += '<div class="mhItem">'
+        + '<div class="mhIcon '+esc(m.tone)+'">'+esc(m.icon)+'</div>'
+        + '<div class="mhBody">'
+        + '<div class="mhTop"><span class="mhTime">'+esc(m.time)+'</span>'
+        + '<span class="mhPlace">'+esc(m.place)+' を'+act+'</span></div>'
+        + '<div class="mhHead">'+esc(m.head)+'</div>'
+        + (m.stats && m.stats.length
+            ? '<div class="mhStats">'+m.stats.map(esc).join("　/　")+'</div>' : '')
+        + '</div></div>';
+    }
+    h += '<button type="button" class="mhShare" id="mhShareBtn">🖼 画像にしてLINEで送る</button>';
+    el.innerHTML = h;
+    msgLogForImage = list;   // 画像を作るときにも同じ内容を使う
+    var sb = document.getElementById("mhShareBtn");
+    if(sb) sb.addEventListener("click", shareMsgHistoryImage);
+  }
+
+  // ---------- メッセージの記録を画像にして共有する ----------
+  // 画面の描画をそのまま画像にする手段が無いため、canvas に自分で描く。
+  function buildHistoryCanvas(){
+    var W = 900;
+    var pad = 34, lineH = 30;
+    // 高さを先に見積もる
+    var list = (msgLogForImage && msgLogForImage.length) ? msgLogForImage : buildMsgLogFromActuals();
+    var rowsH = [];
+    for(var i=0;i<list.length;i++){
+      var m = list[i];
+      var n = 2 + (m.stats && m.stats.length ? 1 : 0);
+      rowsH.push(n*lineH + 20);
+    }
+    var headH = 150;
+    var total = headH + rowsH.reduce(function(a,b){return a+b;},0) + pad*2 + 40;
+
+    var cv = document.createElement("canvas");
+    cv.width = W; cv.height = Math.max(400, total);
+    var g = cv.getContext("2d");
+
+    // 背景
+    var grd = g.createLinearGradient(0,0,0,cv.height);
+    grd.addColorStop(0,"#0f2340"); grd.addColorStop(1,"#0a1628");
+    g.fillStyle = grd; g.fillRect(0,0,cv.width,cv.height);
+
+    // 見出し
+    g.fillStyle = "#ffffff";
+    g.font = "bold 40px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillText(route.title || "Night Walk", pad, pad+44);
+    g.fillStyle = "#9fc0e8";
+    g.font = "600 22px -apple-system, 'Hiragino Sans', sans-serif";
+    var who = userName ? userName + "　" : "";
+    g.fillText(who + (route.date || ""), pad, pad+82);
+    g.fillStyle = "rgba(255,255,255,.25)";
+    g.fillRect(pad, pad+104, W-pad*2, 2);
+
+    var y = headH + 24;
+    var colors = {good:"#3fbf6a", ok:"#4a90d9", warn:"#e0a022"};
+    for(var j=0;j<list.length;j++){
+      var mm = list[j];
+      // 左の色帯
+      g.fillStyle = colors[mm.tone] || colors.ok;
+      g.fillRect(pad, y-6, 6, rowsH[j]-10);
+
+      g.fillStyle = "#ffffff";
+      g.font = "bold 27px -apple-system, 'Hiragino Sans', sans-serif";
+      var act = (mm.role === "arrive") ? " に到着" : " を出発";
+      g.fillText(mm.time + "　" + mm.place + act, pad+22, y+20);
+
+      g.fillStyle = "#dbe8fa";
+      g.font = "bold 24px -apple-system, 'Hiragino Sans', sans-serif";
+      g.fillText(mm.icon + " " + mm.head, pad+22, y+20+lineH);
+
+      if(mm.stats && mm.stats.length){
+        g.fillStyle = "#8fb0d8";
+        g.font = "600 20px -apple-system, 'Hiragino Sans', sans-serif";
+        g.fillText(mm.stats.join("　/　"), pad+22, y+20+lineH*2);
+      }
+      y += rowsH[j];
+    }
+
+    g.fillStyle = "#5d7ea8";
+    g.font = "600 18px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillText("Night Walker", pad, cv.height - pad);
+    return cv;
+  }
+
+  function shareMsgHistoryImage(){
+    var note = document.getElementById("pdfNote");
+    if(!msgLogForImage.length){ return; }
+    var cv;
+    try{ cv = buildHistoryCanvas(); }
+    catch(e){
+      if(note){ note.textContent = "画像を作れませんでした。"; note.style.color = "#c62828"; }
+      return;
+    }
+    cv.toBlob(function(blob){
+      if(!blob){
+        if(note){ note.textContent = "画像を作れませんでした。"; note.style.color = "#c62828"; }
+        return;
+      }
+      var file = new File([blob], "nightwalk_messages.png", {type:"image/png"});
+      var text = (route.title || "Night Walk") + "　" + (userName ? userName + "　" : "") + "の記録";
+      var payload = {files:[file]};
+      try{
+        if(navigator.canShare && navigator.canShare({files:[file], text:text})){
+          payload = {files:[file], text:text};
+        }
+      }catch(e){}
+      if(navigator.canShare && navigator.canShare(payload) && navigator.share){
+        navigator.share(payload).catch(function(err){
+          if(err && err.name === "AbortError") return;
+          downloadBlob(blob, "nightwalk_messages.png", note);
+        });
+      } else {
+        downloadBlob(blob, "nightwalk_messages.png", note);
+      }
+    }, "image/png");
+  }
+
   function renderSummaryTab(){
+    renderCert();
+    renderMsgHistory();
     var rows = buildSummaryRows();
     document.getElementById("paceChart").innerHTML = buildPaceChartSvg(rows);
     document.getElementById("sumTable").innerHTML = summaryTableHtml(rows);
@@ -2540,12 +3252,16 @@
       + '  <div class="msgSub">'+esc(m.sub)+'</div>'
       + statsHtml
       + '  <button type="button" class="msgClose" id="msgCloseBtn">OK（LINEで知らせる）</button>'
+      + '  <button type="button" class="msgImg" id="msgImgBtn">🖼 この画面を画像で送る</button>'
       + '</div></div>';
     el.className = "msgToast show";
 
     // 自動では閉じない。「OK」を押したときだけ次へ進む。
     if(msgTimer){ clearTimeout(msgTimer); msgTimer = null; }
     document.getElementById("msgCloseBtn").addEventListener("click", function(){ hideToast(true); });
+    document.getElementById("msgImgBtn").addEventListener("click", function(){
+      shareOneMessageImage(m);
+    });
 
     playMsgSound(m.tone);
     if(navigator.vibrate){
@@ -2706,19 +3422,64 @@
   }
 
   // 到着・出発の記録時に呼ぶ入口
+  // ---------- メッセージの記録（あとで見返せるように保存する）----------
+  var MSGLOG_KEY = "nightwalk2026_msglog";
+  function loadMsgLog(){
+    try{
+      var raw = localStorage.getItem(MSGLOG_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  var msgLog = loadMsgLog();
+  var msgLogForImage = [];   // 画面に出している一覧（画像化に使う）
+  function saveMsgLog(){
+    try{ localStorage.setItem(MSGLOG_KEY, JSON.stringify(msgLog)); }catch(e){}
+  }
+  function recordMsg(kind, role, id, place, m, ctx){
+    msgLog.push({
+      t: Date.now(),
+      time: ctx.timeStr,
+      kind: kind,                 // point / start / goal
+      role: role,                 // arrive / depart
+      id: id,
+      place: place || "",
+      icon: m.icon || "",
+      head: m.head || "",
+      sub: m.sub || "",
+      stats: m.stats || [],
+      tone: m.tone || "ok"
+    });
+    if(msgLog.length > 200) msgLog.shift();
+    saveMsgLog();
+  }
+
   function showMilestone(role, id, name, onClose){
     var ctx = milestoneContext(role, id);
     if(ctx.isStart && role === "depart"){
+      recordMsg("start", role, id, name, {
+        icon:"🌙", head:"いってらっしゃい！", tone:"ok",
+        sub:"長い夜のはじまりです。",
+        stats:["出発　"+ctx.timeStr]
+      }, ctx);
       showCelebration("start", ctx, onClose);
       return;
     }
     if(ctx.isGoal && role === "arrive"){
+      var gstats = [];
+      if(ctx.elapsedMin != null) gstats.push("所要時間　"+fmtDurationMin(ctx.elapsedMin));
+      gstats.push("到着　"+ctx.timeStr);
+      if(ctx.delayMin != null){ var gd = fmtDelta(ctx.delayMin); if(gd) gstats.push("予定との差　"+gd.text); }
+      recordMsg("goal", role, id, name, {
+        icon:"🏆", head:"完歩おめでとう！", tone:"good",
+        sub:"本当におつかれさまでした。", stats:gstats
+      }, ctx);
       showCelebration("goal", ctx, onClose);
       return;
     }
     var m = (role === "arrive")
       ? arriveMessage(ctx, name)
       : departMessage(ctx, name, (PLAN[id+1] ? PLAN[id+1].name : null));
+    recordMsg("point", role, id, name, m, ctx);
     showToast(m, onClose);
   }
 
@@ -3043,7 +3804,7 @@
   // 同じ場所に置いた version.json を見て、新しい版があれば知らせる。
   // 「更新」を押すと、保存済みの表示データを消してから読み込み直す。
   // 入力した記録や設定（localStorage）は消さない。
-  var APP_VERSION = "2.4.4";
+  var APP_VERSION = "3.2.0";
   var VER_SKIP_KEY = "nightwalk2026_skipver";
 
   function showUpdateBar(newVer, notes){
