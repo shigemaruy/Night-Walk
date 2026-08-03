@@ -506,11 +506,13 @@
 
   function computeSchedule(){
     var rows=[], refDepart=null, paceSum=0, paceCount=0, paceFactor=1, lastActualIdx=-1;
+    var startIsActual = false;   // 実際の出発時刻が記録されているか
     for(var i=0;i<PLAN.length;i++){
       var p=PLAN[i], act=actuals[p.id]||{};
       if(p.type==="start"){
         var ad0=act.depart?combineWithBestDate(act.depart,p.departDate):null;
         var eff=ad0||p.departDate;
+        startIsActual = !!ad0;
         refDepart=eff;
         if(ad0) lastActualIdx=i;
         rows.push({plan:p, plannedArrive:null, plannedDepart:p.departDate,
@@ -519,15 +521,26 @@
         continue;
       }
       var plannedArrive=p.arriveDate, plannedDepart=p.departDate;
-      var actualArrive=act.arrive?combineWithBestDate(act.arrive,plannedArrive):null;
+      // 日付の決め方：直前の出発時刻を基準にする（計画と実際が離れていても正しく解釈するため）
+      var arriveBase = refDepart || plannedArrive;
+      var actualArrive=act.arrive?combineWithBestDate(act.arrive,arriveBase):null;
+      if(actualArrive && refDepart && actualArrive.getTime() < refDepart.getTime()){
+        actualArrive = new Date(actualArrive.getTime() + 24*60*60000);
+      }
       var predictedArrive=refDepart?new Date(refDepart.getTime()+p.walkMin*60000*paceFactor):null;
       var walkActualMin=null, deltaWalkMin=null;
       if(actualArrive&&refDepart){
         walkActualMin=(actualArrive.getTime()-refDepart.getTime())/60000;
         deltaWalkMin=walkActualMin-p.walkMin;
-        var ratio=p.walkMin>0?(walkActualMin/p.walkMin):1;
-        ratio=Math.max(0.5,Math.min(2.0,ratio));
-        paceSum+=ratio; paceCount++; paceFactor=paceSum/paceCount;
+        // 出発を記録していない状態の最初の区間は、計画出発時刻との差が誤差になるため学習に使わない
+        var usable = (walkActualMin > 0) && (startIsActual || i > 1);
+        if(usable){
+          var ratio=p.walkMin>0?(walkActualMin/p.walkMin):1;
+          ratio=Math.max(0.5,Math.min(2.0,ratio));
+          paceSum+=ratio; paceCount++; paceFactor=paceSum/paceCount;
+        } else {
+          walkActualMin=null; deltaWalkMin=null;
+        }
         lastActualIdx=i;
       }
       var actualDepartUser=null;
@@ -712,7 +725,9 @@
     var goalPredicted=goalRow.actualArrive||goalRow.predictedArrive;
     document.getElementById("goalEta").textContent=fmtTime(goalPredicted);
     var goalPlan=PLAN[PLAN.length-1];
-    var gd=fmtDelta(goalPredicted && goalPlan && goalPlan.arriveDate ? (goalPredicted-goalPlan.arriveDate)/60000 : null);
+    var goalRaw = (goalPredicted && goalPlan && goalPlan.arriveDate)
+      ? (goalPredicted-goalPlan.arriveDate)/60000 : null;
+    var gd = (goalRaw !== null && Math.abs(goalRaw) <= 180) ? fmtDelta(goalRaw) : null;
     var gdEl=document.getElementById("goalDelta");
     gdEl.textContent= gd ? gd.text : "—";
     gdEl.className="val"+(gd&&gd.cls!=="flat"?" "+gd.cls:"");
@@ -1018,7 +1033,7 @@
     return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
-  var APP_VERSION = "2.4.4";
+  var APP_VERSION = "3.2.0";
   var VER_SKIP_KEY = "nwwatcher_skipver";
 
   function showUpdateBar(newVer, notes){
