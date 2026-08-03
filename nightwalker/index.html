@@ -2016,13 +2016,36 @@
     }
 
     // 三日月（右上・光る側は右）
+    // 満月を描いたあと、その場の背景をそのまま切り抜いて左にずらして重ねる。
+    // 背景と完全に同じ色になるので、境目が見えない。
     var mx = W-170, my = 150, mr = 62;
+    var bx = mx - mr*1.7, by = my - mr*1.7, bs = mr*3.4;
+    var back = null;
+    try{
+      // 月を描く前の背景を控えておく
+      back = g.getImageData(bx, by, bs, bs);
+    }catch(e){ back = null; }
+
     g.fillStyle = "#f6ecc9";
-    g.beginPath(); g.arc(mx,my,mr,0,Math.PI*2); g.fill();
-    g.save();
-    g.globalCompositeOperation = "destination-out";
-    g.beginPath(); g.arc(mx - mr*0.58, my - mr*0.26, mr*1.05, 0, Math.PI*2); g.fill();
-    g.restore();
+    g.beginPath(); g.arc(mx, my, mr, 0, Math.PI*2); g.fill();
+
+    if(back){
+      // 控えた背景を、円形に切り抜いて左上へずらして戻す
+      var tmp = document.createElement("canvas");
+      tmp.width = bs; tmp.height = bs;
+      var tg = tmp.getContext("2d");
+      tg.putImageData(back, 0, 0);
+      g.save();
+      g.beginPath();
+      g.arc(mx - mr*0.62, my - mr*0.28, mr*1.02, 0, Math.PI*2);
+      g.clip();
+      g.drawImage(tmp, bx - mr*0.62, by - mr*0.28);
+      g.restore();
+    } else {
+      // 背景を取得できない場合は、近い色で塗る
+      g.fillStyle = "#0c1a35";
+      g.beginPath(); g.arc(mx - mr*0.62, my - mr*0.28, mr*1.02, 0, Math.PI*2); g.fill();
+    }
 
     // 金の枠
     var pad = 54;
@@ -3804,7 +3827,7 @@
   // 同じ場所に置いた version.json を見て、新しい版があれば知らせる。
   // 「更新」を押すと、保存済みの表示データを消してから読み込み直す。
   // 入力した記録や設定（localStorage）は消さない。
-  var APP_VERSION = "3.2.0";
+  var APP_VERSION = "3.2.1";
   var VER_SKIP_KEY = "nightwalk2026_skipver";
 
   function showUpdateBar(newVer, notes){
