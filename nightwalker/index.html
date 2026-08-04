@@ -1990,8 +1990,34 @@
       elapsed: elapsed, doneKm: doneKm, totalKm: totalKm,
       doneLegs: doneLegs, totalLegs: rows.length,
       walkMin: totWalk, restMin: totRest, pace: pace, delay: delay,
+      temp: tempRange(), humid: humidRange(),
       planName: (currentPlanKey === "fast") ? route.plans[1].name : route.plans[0].name
     };
+  }
+
+  // 記録した天候から、気温・湿度の幅を求める
+  function weatherRange(key){
+    var vals = [];
+    for(var k in weatherLog){
+      if(!Object.prototype.hasOwnProperty.call(weatherLog, k)) continue;
+      var w = weatherLog[k];
+      if(w && typeof w[key] === "number") vals.push(w[key]);
+    }
+    if(!vals.length) return null;
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    return { lo: lo, hi: hi };
+  }
+  function tempRange(){
+    var r = weatherRange("temp");
+    if(!r) return null;
+    var lo = Math.round(r.lo), hi = Math.round(r.hi);
+    return (lo === hi) ? (lo + "℃") : (lo + "℃ 〜 " + hi + "℃");
+  }
+  function humidRange(){
+    var r = weatherRange("humidity");
+    if(!r) return null;
+    var lo = Math.round(r.lo), hi = Math.round(r.hi);
+    return (lo === hi) ? (lo + "%") : (lo + "% 〜 " + hi + "%");
   }
 
   // 完歩証を描く（縦長・保存や印刷にも耐える大きさ）
@@ -2067,13 +2093,24 @@
     g.beginPath(); g.moveTo(W/2-150, 300); g.lineTo(W/2+150, 300); g.stroke();
 
     // 名前
-    g.fillStyle = "#ffffff";
     if(c.name){
+      // 氏名と「殿」を、ひとまとまりで中央に置く
       g.font = "bold 62px -apple-system, 'Hiragino Sans', sans-serif";
-      g.fillText(c.name, W/2, 400);
-      g.fillStyle = "#a9c4e8";
-      g.font = "600 26px -apple-system, 'Hiragino Sans', sans-serif";
-      g.fillText("殿", W/2 + g.measureText(c.name).width/2 + 200, 400);
+      var nameW = g.measureText(c.name).width;
+      g.font = "600 30px -apple-system, 'Hiragino Sans', sans-serif";
+      var donoW = g.measureText("殿").width;
+      var gap = 18;
+      var totalW = nameW + gap + donoW;
+      var left = W/2 - totalW/2;
+
+      g.textAlign = "left";
+      g.fillStyle = "#ffffff";
+      g.font = "bold 62px -apple-system, 'Hiragino Sans', sans-serif";
+      g.fillText(c.name, left, 400);
+      g.fillStyle = "#cfe0f5";
+      g.font = "600 30px -apple-system, 'Hiragino Sans', sans-serif";
+      g.fillText("殿", left + nameW + gap, 400);
+      g.textAlign = "center";
     }
 
     // 本文
@@ -2092,12 +2129,15 @@
     g.font = "bold 46px -apple-system, sans-serif";
     g.fillText("km", W/2 + 118, 660);
 
-    // 記録の枠
-    var bx = 130, by = 716, bw = W-260, bh = 396;
+    // 記録の枠（左寄せ。右側は地図を置くため空ける）
+    var bx = 100, by = 716, bw = 508, bh = 396;
     g.fillStyle = "rgba(255,255,255,.07)";
     roundRect(g, bx, by, bw, bh, 20); g.fill();
     g.strokeStyle = "rgba(255,255,255,.2)"; g.lineWidth = 1.5;
     roundRect(g, bx, by, bw, bh, 20); g.stroke();
+
+    // 右側に三重県とルートの絵
+    drawMieMap(g, bx + bw + 20, by, W - (bx + bw + 20) - 100, bh);
 
     var items = [];
     if(c.elapsed != null) items.push(["所要時間", fmtDurationMin(c.elapsed)]);
@@ -2106,24 +2146,23 @@
     items.push(["歩行時間", fmtDurationMin(c.walkMin)]);
     items.push(["休憩時間", fmtDurationMin(c.restMin)]);
     items.push(["通過地点", c.doneLegs + " / " + c.totalLegs + " 区間"]);
-    if(c.delay != null){
-      var dd = fmtDelta(c.delay);
-      if(dd) items.push(["予定との差", dd.text]);
-    }
+    if(c.temp)  items.push(["気温", c.temp]);
+    if(c.humid) items.push(["湿度", c.humid]);
 
-    var ry = by + 56;
+    var step = Math.min(49, (bh - 44) / Math.max(items.length, 1));
+    var ry = by + 44;
     items.forEach(function(it){
       g.textAlign = "left";
       g.fillStyle = "#9fc0e8";
       g.font = "600 25px -apple-system, 'Hiragino Sans', sans-serif";
-      g.fillText(it[0], bx+42, ry);
+      g.fillText(it[0], bx+34, ry);
       g.textAlign = "right";
       g.fillStyle = "#ffffff";
       g.font = "bold 29px -apple-system, 'Hiragino Sans', sans-serif";
-      g.fillText(it[1], bx+bw-42, ry);
+      g.fillText(it[1], bx+bw-34, ry);
       g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(bx+34, ry+16); g.lineTo(bx+bw-34, ry+16); g.stroke();
-      ry += 49;
+      g.beginPath(); g.moveTo(bx+30, ry+14); g.lineTo(bx+bw-30, ry+14); g.stroke();
+      ry += step;
     });
 
     // 大会名とコース
@@ -2143,6 +2182,102 @@
     drawWalker(g, W/2, 1352, 1.25);
 
     return cv;
+  }
+
+  // 三重県のおよその形と、歩いたルートを描く
+  // 座標は緯度経度。細かい海岸線までは表現せず、県の輪郭が分かる程度にしている。
+  var MIE_SHAPE = [
+    [35.10,136.52],[35.06,136.62],[35.00,136.72],[34.94,136.78],
+    [34.88,136.88],[34.82,136.92],[34.76,136.94],[34.70,136.90],
+    [34.62,136.86],[34.54,136.90],[34.48,136.86],[34.42,136.86],
+    [34.36,136.90],[34.30,136.92],[34.24,136.90],[34.18,136.94],
+    [34.12,136.90],[34.08,136.82],[34.06,136.74],[34.00,136.66],
+    [33.94,136.58],[33.88,136.48],[33.84,136.36],[33.78,136.26],
+    [33.72,136.14],[33.74,136.04],[33.80,135.98],[33.88,135.96],
+    [33.96,135.92],[34.04,135.94],[34.10,136.00],[34.16,136.04],
+    [34.22,136.02],[34.28,136.06],[34.34,136.06],[34.40,136.02],
+    [34.46,135.98],[34.52,136.00],[34.58,135.96],[34.64,136.00],
+    [34.70,136.06],[34.76,136.10],[34.82,136.18],[34.88,136.26],
+    [34.94,136.32],[35.00,136.40],[35.06,136.46]
+  ];
+
+  function drawMieMap(g, x, y, w, h){
+    var pts = route.points || [];
+    if(!pts.length) return;
+
+    // 県の形が収まるように縮尺を決める
+    var lats = MIE_SHAPE.map(function(p){ return p[0]; });
+    var lngs = MIE_SHAPE.map(function(p){ return p[1]; });
+    var latMin = Math.min.apply(null, lats), latMax = Math.max.apply(null, lats);
+    var lngMin = Math.min.apply(null, lngs), lngMax = Math.max.apply(null, lngs);
+
+    var pad = 16;
+    var availW = w - pad*2, availH = h - pad*2 - 34;   // 下に見出しの余白
+    // 緯度1度と経度1度の実距離が違うので、緯度側を補正する
+    var latSpan = latMax - latMin;
+    var lngSpan = (lngMax - lngMin) * Math.cos((latMin+latMax)/2 * Math.PI/180);
+    var scale = Math.min(availW / lngSpan, availH / latSpan);
+    var drawW = lngSpan * scale, drawH = latSpan * scale;
+    var ox = x + (w - drawW)/2;
+    var oy = y + pad + (availH - drawH)/2;
+
+    function X(lng){
+      return ox + (lng - lngMin) * Math.cos((latMin+latMax)/2 * Math.PI/180) * scale;
+    }
+    function Y(lat){ return oy + (latMax - lat) * scale; }
+
+    // 県の形（塗り＋輪郭）
+    g.beginPath();
+    for(var i=0;i<MIE_SHAPE.length;i++){
+      var q = MIE_SHAPE[i];
+      if(i===0) g.moveTo(X(q[1]), Y(q[0])); else g.lineTo(X(q[1]), Y(q[0]));
+    }
+    g.closePath();
+    g.fillStyle = "rgba(255,255,255,.09)";
+    g.fill();
+    g.strokeStyle = "rgba(200,220,245,.5)";
+    g.lineWidth = 2;
+    g.stroke();
+
+    // 歩いたルート
+    g.beginPath();
+    for(var j=0;j<pts.length;j++){
+      var pt = pts[j];
+      var px = X(Number(pt.lng)), py = Y(Number(pt.lat));
+      if(j===0) g.moveTo(px,py); else g.lineTo(px,py);
+    }
+    g.strokeStyle = "#f3d98c";
+    g.lineWidth = 4;
+    g.stroke();
+
+    // 通過地点
+    for(var k=0;k<pts.length;k++){
+      var p2 = pts[k];
+      var cx2 = X(Number(p2.lng)), cy2 = Y(Number(p2.lat));
+      var isEnd = (k===0 || k===pts.length-1);
+      g.beginPath();
+      g.arc(cx2, cy2, isEnd ? 7 : 3.6, 0, Math.PI*2);
+      g.fillStyle = isEnd ? "#ffffff" : "#f3d98c";
+      g.fill();
+      if(isEnd){
+        g.strokeStyle = "#d4a933"; g.lineWidth = 2.5; g.stroke();
+      }
+    }
+
+    // S と G
+    var sp = pts[0], gp = pts[pts.length-1];
+    g.fillStyle = "#ffffff";
+    g.font = "bold 22px -apple-system, sans-serif";
+    g.textAlign = "right";
+    g.fillText("S", X(Number(sp.lng)) - 12, Y(Number(sp.lat)) + 7);
+    g.textAlign = "left";
+    g.fillText("G", X(Number(gp.lng)) + 12, Y(Number(gp.lat)) + 7);
+
+    // 見出し
+    g.textAlign = "center";
+    g.fillStyle = "#9fc0e8";
+    g.font = "600 19px -apple-system, 'Hiragino Sans', sans-serif";
+    g.fillText("三重県", x + w/2, y + h - 10);
   }
 
   // 完歩証に入れる歩く人の絵
@@ -3827,7 +3962,7 @@
   // 同じ場所に置いた version.json を見て、新しい版があれば知らせる。
   // 「更新」を押すと、保存済みの表示データを消してから読み込み直す。
   // 入力した記録や設定（localStorage）は消さない。
-  var APP_VERSION = "3.2.1";
+  var APP_VERSION = "3.3.0";
   var VER_SKIP_KEY = "nightwalk2026_skipver";
 
   function showUpdateBar(newVer, notes){
